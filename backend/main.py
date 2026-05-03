@@ -84,13 +84,19 @@ def health():
 DIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "dist")
 
 if os.path.exists(DIST_DIR):
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        # Serve actual files (waves.mp4, assets, etc.) if they exist
+        file_path = os.path.join(DIST_DIR, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        # Fall back to index.html for SPA routing
+        return FileResponse(os.path.join(DIST_DIR, "index.html"))
+
+    # Mount assets for proper range-request support (video seeking, caching)
     assets_dir = os.path.join(DIST_DIR, "assets")
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def serve_spa(full_path: str):
-        return FileResponse(os.path.join(DIST_DIR, "index.html"))
 else:
     @app.get("/")
     def root():
