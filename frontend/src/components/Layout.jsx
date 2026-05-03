@@ -124,7 +124,7 @@ export default function Layout() {
       </AnimatePresence>
 
       <video autoPlay loop muted playsInline
-        style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none', opacity: 0.45, filter: 'brightness(3) saturate(1.4) contrast(1.1)', mixBlendMode: 'screen' }}>
+        style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none', opacity: 0.5, filter: 'brightness(2.5) saturate(1.6) contrast(1.2)' }}>
         <source src="/waves.mp4" type="video/mp4" />
       </video>
 
