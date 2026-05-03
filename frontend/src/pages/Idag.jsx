@@ -426,12 +426,12 @@ export default function Idag() {
                   <span style={{ fontSize: 9, fontWeight: 700, color: '#00d4aa', background: 'rgba(0,212,170,0.1)', border: '1px solid rgba(0,212,170,0.2)', borderRadius: 4, padding: '2px 8px', letterSpacing: 1.4, textTransform: 'uppercase' }}>
                     {m.period || `Månad ${m.month}`}
                   </span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', fontFamily: 'Georgia, serif' }}>{m.title}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', fontFamily: 'Georgia, serif' }}>{decodeUnicode(m.title)}</span>
                 </div>
                 {m.goals?.map((g, gi) => (
                   <div key={gi} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                     <div style={{ width: 3, height: 3, borderRadius: '50%', background: '#a78bfa', marginTop: 7, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55 }}>{g}</span>
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55 }}>{decodeUnicode(g)}</span>
                   </div>
                 ))}
               </motion.div>

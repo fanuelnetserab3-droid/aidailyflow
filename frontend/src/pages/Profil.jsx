@@ -206,8 +206,8 @@ export default function Profil() {
       setLoading(true)
       try {
         const endpoint = (userId && !isNaN(userId))
-          ? `http://localhost:8000/api/profile/${userId}`
-          : 'http://localhost:8000/api/profile'
+          ? `/api/profile/${userId}`
+          : '/api/profile'
         const res = await axios.get(endpoint)
         setProfile(res.data || {})
       } catch (err) {
@@ -276,8 +276,8 @@ export default function Profil() {
 
     try {
       const endpoint = (userId && !isNaN(userId))
-        ? `http://localhost:8000/api/profile/${userId}`
-        : 'http://localhost:8000/api/profile'
+        ? `/api/profile/${userId}`
+        : '/api/profile'
       await axios.put(endpoint, updatedProfile)
       setProfile(updatedProfile)
       setToast({ message: 'Profil sparad.', type: 'success' })

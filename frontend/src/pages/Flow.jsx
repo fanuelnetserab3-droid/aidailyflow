@@ -306,7 +306,11 @@ export default function Flow() {
 
   const handleProfileAnswer = async (answers) => {
     const q = QUESTIONS[step]
-    const value = Array.isArray(answers) && answers.length === 1 ? answers[0] : answers
+    // För multi-select frågor (training_type, goals, skills) — bevara alltid array
+    const isMultiField = ['training_type', 'goals', 'skills'].includes(q.id)
+    const value = isMultiField
+      ? (Array.isArray(answers) ? answers : [answers])
+      : (Array.isArray(answers) && answers.length === 1 ? answers[0] : answers)
     const displayValue = Array.isArray(value) ? value.join(', ') : value
     pushMsg('user', displayValue)
     let finalName = profile.name

@@ -14,6 +14,7 @@ import Listor from './pages/Listor'
 import Vanor from './pages/Vanor'
 import Profil from './pages/Profil'
 import Onboarding from './pages/Onboarding'
+import Prenumerera from './pages/Prenumerera'
 
 function LoadingScreen() {
   return (
@@ -34,29 +35,31 @@ function PrivateRouteWrapper({ children }) {
   const { user, loading } = useAuth()
   const [showOnboarding, setShowOnboarding] = React.useState(false)
   const [checkingOnboarding, setCheckingOnboarding] = React.useState(true)
+  const [trialExpired, setTrialExpired] = React.useState(false)
 
   React.useEffect(() => {
     if (user && !loading) {
       const userId = localStorage.getItem('user_id')
       const hasCompleted = localStorage.getItem('onboarding_complete') === 'true'
 
+      // Kolla subscription-status
+      axios.get('/api/subscription/status').then(res => {
+        if (res.data.trial_expired) setTrialExpired(true)
+      }).catch(() => {})
+
       if (hasCompleted) {
         setShowOnboarding(false)
         setCheckingOnboarding(false)
       } else {
-        // Check if profile has name (indicating they completed onboarding before this feature)
         axios.get(`/api/profile/${userId}`).then(res => {
           const profile = res.data
           if (profile?.name) {
-            // Already has a name, so completed onboarding in the past
             localStorage.setItem('onboarding_complete', 'true')
             setShowOnboarding(false)
           } else {
-            // No name, show onboarding
             setShowOnboarding(true)
           }
         }).catch(() => {
-          // Profile fetch failed, show onboarding
           setShowOnboarding(true)
         }).finally(() => {
           setCheckingOnboarding(false)
@@ -67,6 +70,8 @@ function PrivateRouteWrapper({ children }) {
 
   if (loading || checkingOnboarding) return <LoadingScreen />
   if (!user) return <Navigate to="/auth" replace />
+
+  if (trialExpired) return <Prenumerera />
 
   if (showOnboarding) {
     return <Onboarding onClose={() => setShowOnboarding(false)} />
@@ -98,6 +103,7 @@ export default function App() {
             <Route path="/vanor" element={<Vanor />} />
             <Route path="/profil" element={<Profil />} />
           </Route>
+          <Route path="/prenumerera" element={<Prenumerera />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
