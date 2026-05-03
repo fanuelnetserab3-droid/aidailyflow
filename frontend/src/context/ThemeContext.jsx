@@ -1,23 +1,19 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext } from 'react'
 
 const ThemeContext = createContext()
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'dark'
-  })
+  // Always dark — ocean design is the identity of this app
+  const theme = 'dark'
 
-  useEffect(() => {
-    localStorage.setItem('theme', theme)
-    document.body.setAttribute('data-theme', theme)
-  }, [theme])
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
-  }
+  // Force dark on mount, overriding any stale localStorage value
+  React.useEffect(() => {
+    localStorage.setItem('theme', 'dark')
+    document.body.setAttribute('data-theme', 'dark')
+  }, [])
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme: () => {} }}>
       {children}
     </ThemeContext.Provider>
   )

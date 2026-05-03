@@ -1,9 +1,21 @@
 import os
 import json
 import anthropic
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
+import zoneinfo
 from sqlalchemy.orm import Session
 import models
+
+def _get_sweden_today() -> date:
+    """Returnerar dagens datum i Sverige (hanterar UTC vs CET/CEST)."""
+    tz = zoneinfo.ZoneInfo("Europe/Stockholm")
+    return datetime.now(tz).date()
+
+def _get_sweden_weekday() -> str:
+    """Returnerar veckodagsnamn på svenska baserat på svensk tid."""
+    tz = zoneinfo.ZoneInfo("Europe/Stockholm")
+    idx = datetime.now(tz).weekday()  # 0=Måndag, 6=Söndag
+    return WEEKDAYS_SV[idx]
 
 WEEKDAYS_SV = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag", "Söndag"]
 
@@ -114,33 +126,35 @@ Profilen ovan innehåller ALL information du behöver.
 Fråga ALDRIG om vaknar, sömn, träning, jobb, skills, budget eller tidsram - det finns redan i profilen.
 När användaren säger "Skapa mitt schema" eller liknande - läs profilen och skapa schemat DIREKT med create_task.
 
-SCHEMA-SKAPANDE - GÖR DETTA DIREKT:
-1. Läs profilen noggrant
-2. Använd delete_schedule för att rensa gamla uppgifter
-3. Använd create_task för varje uppgift - MAX 7 per dag
-4. Skriv ALDRIG schemat som text i chatten
-5. Efter att schemat är skapat - skriv BARA 2-3 meningar. Bekräfta att schemat är klart för varje dag de kommande 6 månaderna och att det börjar imorgon. Avsluta med exakt [Gå till schemat]
+SCHEMA-SKAPANDE - GÖR DETTA DIREKT (SNABBT):
+1. Använd update_schedule (INTE create_task) - det sätter ALLA uppgifter på en gång per dag
+2. Kalla update_schedule för dag 1 ({today_date}) med alla 6 uppgifter i tasks-arrayen
+3. Kalla update_schedule för dag 2 (imorgon) med alla 6 uppgifter
+4. Fortsätt för dag 3-7 (totalt 7 anrop)
+5. Kalla save_milestones med alla 6 milstolpar i ett enda anrop
+6. Skriv BARA 1-2 meningar efteråt. Avsluta med exakt [Gå till schemat]
 
-DAGLIGT SCHEMA - bygg baserat på profilen:
+KRITISKT: Använd ALDRIG create_task när du skapar schemat - det är för långsamt.
+Använd update_schedule med tasks=[{title,category,start,end,period,subtasks:[],links:[],done:false}, ...]
+
+DAGLIGT SCHEMA - bygg baserat på profilen, MAX 6 uppgifter per dag:
 - Morgonrutin: wake_time → wake_time+30min (kategori: morgon)
 - Frukost: wake_time+30min → wake_time+1h (kategori: mat)
-- Träning: om training != "Tränar inte" - inkludera med training_duration + pendlingstid (kategori: träning)
-- Deep Work 1: 2h lärande på skills (kategori: lärande)
+- Träning: om training != "Tränar inte" (kategori: träning)
+- Deep Work: 2h lärande på skills (kategori: lärande)
 - Lunch: 1h (kategori: mat)
-- Deep Work 2: 1-2h lärande (kategori: lärande)
-- Jobbsök: 1h om söker jobb (kategori: jobb)
 - Kvällsreflektion: 20min innan sovtid (kategori: reflektion)
 
-FÖR 6 MÅNADER - skapa 7 dagars UNIKA uppgifter:
-Dag 1 ({today_date}): Setup och grunder - installera verktyg, registrera konton
-Dag 2: Fördjupning - djupdyk i skill 1
-Dag 3: Praktisk tillämpning - bygg något konkret
-Dag 4: Nytt område - skill 2 eller kompletterande kunskap
-Dag 5: Projekt - bygg ett verkligt projekt
-Dag 6: Nätverkande - LinkedIn, communities, outreach
-Dag 7: Reflektion - granska veckan, planera nästa
+FÖR 7 UNIKA DAGAR:
+Dag 1 ({today_date}): Deep Work = "Setup och grunder - installera verktyg"
+Dag 2: Deep Work = "Fördjupning i [skill 1]"
+Dag 3: Deep Work = "Bygg något konkret"
+Dag 4: Deep Work = "[Skill 2] - nytt område"
+Dag 5: Deep Work = "Projektdag - bygg ett riktigt projekt"
+Dag 6: Deep Work = "Nätverkande - LinkedIn och communities"
+Dag 7: Deep Work = "Veckoreflexion och planering"
 
-Kalla sedan save_milestones med 6 milstolpar (en per månad).
+Kalla save_milestones med 6 milstolpar i ETT anrop.
 
 SMARTA FÖLJDFRÅGOR (bara om användaren tar upp något nytt):
 - Nämner specifik tid → bekräfta och använd den
@@ -324,18 +338,18 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
     api_key = os.getenv("ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(api_key=api_key)
 
-    today = date.today()
+    today = _get_sweden_today()
     profile = _exec_get_profile(db, user_id)
 
     system = SYSTEM_PROMPT.format(
         today_date=today.isoformat(),
-        today_weekday=WEEKDAYS_SV[today.weekday()],
+        today_weekday=_get_sweden_weekday(),
         profile=_profile_to_str(profile),
     )
 
     claude_messages = list(messages)
 
-    for _ in range(15):
+    for _ in range(25):
         response = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=4096,
