@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import NotificationBell from './NotificationBell'
+import axios from 'axios'
 
 const NAV = [
   { to: '/idag', label: 'Schema', icon: CalIcon },
@@ -38,6 +39,11 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [prevIndex, setPrevIndex] = useState(0)
+  const [subStatus, setSubStatus] = useState(null)
+
+  useEffect(() => {
+    axios.get('/api/subscription/status').then(res => setSubStatus(res.data)).catch(() => {})
+  }, [])
 
   const navOrder = ['/idag', '/flow', '/tankar', '/listor', '/vanor', '/profil']
   const currentIndex = navOrder.indexOf(location.pathname) !== -1 ? navOrder.indexOf(location.pathname) : 0
@@ -106,6 +112,40 @@ export default function Layout() {
         )}
       </AnimatePresence>
 
+      {/* Trial banner */}
+      {subStatus && !subStatus.is_subscribed && !subStatus.trial_expired && (
+        <motion.div
+          initial={{ y: -40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+          style={{
+            position: 'fixed',
+            top: 'calc(env(safe-area-inset-top, 0px))',
+            left: 0, right: 0,
+            zIndex: 150,
+            background: 'linear-gradient(90deg, rgba(0,212,170,0.15), rgba(167,139,250,0.15))',
+            backdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(0,212,170,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+            padding: '7px 16px',
+          }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', letterSpacing: 0.3 }}>
+            {subStatus.days_left != null ? `${subStatus.days_left} dagar kvar av din gratis trial` : 'Gratis trial aktiv'}
+          </span>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={async () => {
+              try {
+                const res = await axios.post('/api/subscription/create-checkout')
+                window.location.href = res.data.url
+              } catch {}
+            }}
+            style={{ background: 'linear-gradient(90deg,#00d4aa,#a78bfa)', border: 'none', borderRadius: 8, padding: '4px 12px', fontSize: 11, fontWeight: 800, color: '#0f172a', cursor: 'pointer', letterSpacing: 0.3 }}>
+            ⚡ Uppgradera
+          </motion.button>
+        </motion.div>
+      )}
+
       <video autoPlay loop muted playsInline
         style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none', opacity: 1, filter: 'brightness(0.38) saturate(1.2)' }}>
         <source src="/waves.mp4" type="video/mp4" />
@@ -135,7 +175,7 @@ export default function Layout() {
             animate="in"
             exit="out"
             transition={pageTransition}
-            style={{ flex: 1, overflowY: 'auto', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 68px)', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
+            style={{ flex: 1, overflowY: 'auto', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 68px)', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 36px)' }}
           >
             <Outlet />
           </motion.main>
