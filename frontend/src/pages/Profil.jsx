@@ -196,6 +196,8 @@ export default function Profil() {
   const [editingValue, setEditingValue] = useState('')
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
+  const [subStatus, setSubStatus] = useState(null)
+  const [upgradingPlan, setUpgradingPlan] = useState(false)
 
   const userId = useMemo(() => localStorage.getItem('user_id'), [])
   const profileName = profile.name || profile.namn || 'Din profil'
@@ -216,8 +218,26 @@ export default function Profil() {
         setLoading(false)
       }
     }
+    async function loadSub() {
+      try {
+        const res = await axios.get('/api/subscription/status')
+        setSubStatus(res.data)
+      } catch {}
+    }
     loadProfile()
+    loadSub()
   }, [userId])
+
+  const handleUpgrade = async () => {
+    setUpgradingPlan(true)
+    try {
+      const res = await axios.post('/api/subscription/create-checkout')
+      window.location.href = res.data.url
+    } catch {
+      setToast({ message: 'Kunde inte starta betalning. Försök igen.', type: 'error' })
+      setUpgradingPlan(false)
+    }
+  }
 
   const filledCount = useMemo(() => {
     return FIELD_CONFIGS.filter(field => {
@@ -445,6 +465,51 @@ export default function Profil() {
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
+
+              {/* Prenumeration */}
+              <div style={{ borderRadius: 22, padding: 20, background: 'linear-gradient(135deg, rgba(0,212,170,0.1) 0%, rgba(167,139,250,0.1) 100%)', border: '1px solid rgba(0,212,170,0.25)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: -40, right: -40, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,212,170,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                <div style={{ fontSize: 10, letterSpacing: 2, color: '#00d4aa', textTransform: 'uppercase', marginBottom: 8 }}>Ditt abonnemang</div>
+                {subStatus?.is_subscribed ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.6)' }} />
+                      <span style={{ fontSize: 16, fontWeight: 800, color: '#f8fafc' }}>Pro — Aktiv</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Tack för att du prenumererar!</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 8px rgba(245,158,11,0.6)' }} />
+                          <span style={{ fontSize: 16, fontWeight: 800, color: '#f8fafc' }}>Gratis trial</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                          {subStatus?.days_left != null ? `${subStatus.days_left} dagar kvar` : '7 dagar gratis'}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>99<span style={{ fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.4)' }}> kr/mån</span></div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>efter trial</div>
+                      </div>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(0,212,170,0.3)' }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={handleUpgrade}
+                      disabled={upgradingPlan}
+                      style={{ width: '100%', padding: '13px 0', background: 'linear-gradient(135deg, #00d4aa, #a78bfa)', border: 'none', borderRadius: 14, color: '#0f172a', fontSize: 13, fontWeight: 800, letterSpacing: 0.5, cursor: 'pointer', opacity: upgradingPlan ? 0.7 : 1 }}>
+                      {upgradingPlan ? 'Öppnar betalning...' : '⚡ Uppgradera till Pro — 99 kr/mån'}
+                    </motion.button>
+                    <div style={{ textAlign: 'center', marginTop: 8, fontSize: 10, color: 'rgba(255,255,255,0.25)', letterSpacing: 0.5 }}>
+                      Säker betalning via Stripe · Avsluta när som helst
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div style={{ ...CARD, borderRadius: 22, padding: 18 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>Tema</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
