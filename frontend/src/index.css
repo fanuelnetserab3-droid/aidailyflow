@@ -33,10 +33,10 @@ body::before {
   top: -150px; left: -150px;
   width: 600px; height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,212,170,0.25) 0%, transparent 65%);
-  filter: blur(60px);
+  background: radial-gradient(circle, rgba(0,212,170,0.12) 0%, transparent 65%);
+  filter: blur(80px);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   animation: float 9s ease-in-out infinite;
 }
 
@@ -46,10 +46,10 @@ body::after {
   bottom: -100px; right: -100px;
   width: 500px; height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(167,139,250,0.25) 0%, transparent 65%);
-  filter: blur(60px);
+  background: radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 65%);
+  filter: blur(80px);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   animation: float 12s ease-in-out infinite reverse;
 }
 
@@ -58,10 +58,10 @@ body::after {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.10;
+  opacity: 0.05;
   background-image: radial-gradient(circle, rgba(148,163,184,0.5) 0.6px, transparent 1px);
   background-size: 24px 24px;
-  z-index: 0;
+  z-index: -1;
 }
 
 #root { position: relative; }

@@ -579,31 +579,53 @@ export default function Profil() {
                     ))}
                   </select>
                   <div style={{ textAlign: 'center', marginTop: 12 }}>
-                    <button onClick={() => {
-                      // Test voice
-                      const testText = 'Hej! Detta är ett test av rösten för bättre svensk uttal.'
-                      const utterance = new SpeechSynthesisUtterance(testText)
-                      utterance.lang = 'sv-SE'
-                      utterance.rate = 0.8 * (parseFloat(localStorage.getItem('voiceSpeed')) || 1.0)
-                      utterance.pitch = 0.9
+                    onClick={() => {
+                      const testText = 'Hej! Det här är ett test av rösten. Hur låter den?'
+                      const speak = (voices) => {
+                        const utterance = new SpeechSynthesisUtterance(testText)
+                        utterance.lang = 'sv-SE'
+                        utterance.rate = parseFloat(localStorage.getItem('voiceSpeed')) || 1.0
+                        utterance.pitch = 1.0
+                        utterance.volume = 1.0
 
-                      const voices = window.speechSynthesis.getVoices()
-                      let selectedVoice = null
+                        // Prioritera online-röster (bättre kvalitet), sedan lokala
+                        const rank = v => {
+                          const n = v.name.toLowerCase()
+                          if (n.includes('alva')) return 10       // Bästa svenska röst (iOS/macOS)
+                          if (n.includes('hedvig')) return 9       // Microsoft svenska
+                          if (n.includes('klara')) return 8
+                          if (v.localService === false) return 5   // Online-röster = bättre
+                          if (v.lang.startsWith('sv')) return 3
+                          return 1
+                        }
 
-                      if (editingValue === 'auto') {
-                        selectedVoice = voices.find(v => v.lang.startsWith('sv')) || voices.find(v => v.lang.startsWith('en'))
-                      } else if (editingValue === 'svenska') {
-                        selectedVoice = voices.find(v => v.lang.startsWith('sv')) || voices.find(v => v.lang.startsWith('en'))
-                      } else if (editingValue === 'engelska') {
-                        selectedVoice = voices.find(v => v.lang.startsWith('en'))
-                      } else if (editingValue === 'kvinnlig') {
-                        selectedVoice = voices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira'))
-                      } else if (editingValue === 'manlig') {
-                        selectedVoice = voices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david'))
+                        let pool = []
+                        if (editingValue === 'auto' || editingValue === 'svenska') {
+                          pool = voices.filter(v => v.lang.startsWith('sv'))
+                          if (!pool.length) pool = voices.filter(v => v.lang.startsWith('en'))
+                        } else if (editingValue === 'engelska') {
+                          pool = voices.filter(v => v.lang.startsWith('en'))
+                        } else if (editingValue === 'kvinnlig') {
+                          pool = voices.filter(v => v.name.toLowerCase().match(/female|zira|alva|hedvig|klara|anna|karen|samantha/))
+                          if (!pool.length) pool = voices.filter(v => v.lang.startsWith('sv'))
+                        } else if (editingValue === 'manlig') {
+                          pool = voices.filter(v => v.name.toLowerCase().match(/male|david|daniel|thomas/))
+                          if (!pool.length) pool = voices.filter(v => v.lang.startsWith('sv'))
+                        }
+
+                        pool.sort((a, b) => rank(b) - rank(a))
+                        if (pool[0]) utterance.voice = pool[0]
+
+                        window.speechSynthesis.cancel()
+                        window.speechSynthesis.speak(utterance)
                       }
 
-                      if (selectedVoice) utterance.voice = selectedVoice
-                      window.speechSynthesis.speak(utterance)
+                      const voices = window.speechSynthesis.getVoices()
+                      if (voices.length > 0) {
+                        speak(voices)
+                      } else {
+                        window.speechSynthesis.onvoiceschanged = () => speak(window.speechSynthesis.getVoices())
+                      }
                     }}
                     style={{ border: 'none', borderRadius: 12, padding: '8px 16px', background: '#14B8A6', color: '#0F172A', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     Testa röst
