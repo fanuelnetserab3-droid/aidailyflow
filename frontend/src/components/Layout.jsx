@@ -112,7 +112,7 @@ export default function Layout() {
       </video>
 
       <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleLogout}
-        style={{ position: 'fixed', top: 16, right: 16, zIndex: 200, background: 'rgba(17,17,24,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '6px 12px', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+        style={{ position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', right: 12, zIndex: 200, background: 'rgba(17,17,24,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '6px 12px', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
           <polyline points="16 17 21 12 16 7" />
@@ -121,11 +121,11 @@ export default function Layout() {
         Logga ut
       </motion.button>
 
-      <div style={{ position: 'fixed', top: 16, right: 100, zIndex: 200 }}>
+      <div style={{ position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', right: 110, zIndex: 200 }}>
         <NotificationBell />
       </div>
 
-      <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', height: '100vh', maxWidth: 480, margin: '0 auto' }}>
+      <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', height: '100dvh', maxWidth: 480, margin: '0 auto' }}>
         <AnimatePresence mode="wait" custom={direction}>
           <motion.main
             key={location.pathname}
@@ -135,13 +135,13 @@ export default function Layout() {
             animate="in"
             exit="out"
             transition={pageTransition}
-            style={{ flex: 1, overflowY: 'auto', paddingBottom: 68 }}
+            style={{ flex: 1, overflowY: 'auto', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 68px)', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
           >
             <Outlet />
           </motion.main>
         </AnimatePresence>
 
-        <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: 'rgba(8,8,16,0.92)', backdropFilter: 'blur(24px)', borderTop: '1px solid rgba(0,212,170,0.15)', display: 'flex', zIndex: 100 }}>
+        <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: 'rgba(8,8,16,0.92)', backdropFilter: 'blur(24px)', borderTop: '1px solid rgba(0,212,170,0.15)', display: 'flex', paddingBottom: 'env(safe-area-inset-bottom, 0px)', zIndex: 100 }}>
           {NAV.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} style={{ flex: 1, textDecoration: 'none' }}>
               {({ isActive }) => (
