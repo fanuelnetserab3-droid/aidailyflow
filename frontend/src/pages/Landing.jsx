@@ -198,6 +198,22 @@ export default function Landing() {
                 <div style={{ fontSize: 9.5, color: "#475569", marginTop: 8, letterSpacing: 1.6, textTransform: "uppercase" }}>— Flow, din AI-coach</div>
               </motion.div>
 
+              {/* Pricing */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}
+                style={{ background: "rgba(0,212,170,0.05)", border: "1px solid rgba(0,212,170,0.2)", borderRadius: 14, padding: "14px 16px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 11, letterSpacing: 1.5, color: "#00d4aa", textTransform: "uppercase", marginBottom: 4 }}>
+                    ✦ 7 dagar gratis
+                  </div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1 }}>
+                    Sedan 99 kr/månad · Avsluta när som helst
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>99<span style={{ fontSize: 11, fontWeight: 400, color: "rgba(255,255,255,0.4)" }}> kr/mån</span></div>
+                </div>
+              </motion.div>
+
               {/* Buttons */}
               <AnimatePresence>
                 {phase >= 2 && (
