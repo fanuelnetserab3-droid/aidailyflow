@@ -247,8 +247,33 @@ export default function Flow() {
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [voiceMuted, setVoiceMuted] = useState(false)
+  const [voicePlaying, setVoicePlaying] = useState(false)
   const bottomRef = useRef(null)
   const initialized = useRef(false)
+  const audioRef = useRef(null)
+
+  const speakText = async (text) => {
+    if (voiceMuted || !text?.trim()) return
+    try {
+      setVoicePlaying(true)
+      // Rensa text från markdown/specialtecken
+      const clean = text.replace(/\*\*/g, '').replace(/[#\[\]]/g, '').slice(0, 400)
+      const res = await axios.post('/api/tts/speak', { text: clean }, { responseType: 'blob' })
+      const url = URL.createObjectURL(res.data)
+      if (audioRef.current) {
+        audioRef.current.pause()
+        URL.revokeObjectURL(audioRef.current.src)
+      }
+      const audio = new Audio(url)
+      audioRef.current = audio
+      audio.onended = () => { setVoicePlaying(false); URL.revokeObjectURL(url) }
+      audio.onerror = () => setVoicePlaying(false)
+      audio.play()
+    } catch {
+      setVoicePlaying(false)
+    }
+  }
 
   useEffect(() => { _messages = messages }, [messages])
   useEffect(() => { _chatHistory = chatHistory }, [chatHistory])
@@ -284,7 +309,9 @@ export default function Flow() {
         setProfileDone(true)
       } else if (p.completed) {
         setProfileDone(true)
-        pushMsg('assistant', `Hej${p.name ? ` ${p.name}` : ''}! Vad vill du fokusera på idag?`, ['Skapa schema', 'Motivera mig', 'Analysera min vecka'])
+        const greeting = `Hej${p.name ? ` ${p.name}` : ''}! Vad vill du fokusera på idag?`
+        pushMsg('assistant', greeting, ['Skapa schema', 'Motivera mig', 'Analysera min vecka'])
+        speakText(greeting)
       } else {
         setShowWelcome(true)
       }
@@ -334,16 +361,17 @@ export default function Flow() {
     if (nextStep < QUESTIONS.length) {
       setStep(nextStep)
       const msg = QUESTIONS[nextStep].message.replace('{name}', finalName || updatedProfile.name || cleanedValue)
-      setTimeout(() => pushMsg('assistant', msg), 380)
+      setTimeout(() => { pushMsg('assistant', msg); speakText(msg) }, 380)
     } else {
       const finalProfile = { ...updatedProfile, completed: true }
       await axios.post('/api/profile', { ...finalProfile, completed: true }).catch(() => {})
       setProfileDone(true)
       const name = finalName || updatedProfile.name || 'du'
-      setTimeout(() => pushMsg('assistant',
-        `Perfekt, ${name}!\n\nJag har allt jag behöver. Vad vill du börja med?`,
-        ['Skapa mitt schema', 'Vad ska jag göra idag?', 'Ge mig motivation']
-      ), 380)
+      const doneMsg = `Perfekt, ${name}!\n\nJag har allt jag behöver. Vad vill du börja med?`
+      setTimeout(() => {
+        pushMsg('assistant', doneMsg, ['Skapa mitt schema', 'Vad ska jag göra idag?', 'Ge mig motivation'])
+        speakText(doneMsg)
+      }, 380)
       setChatHistory([])
     }
   }
@@ -366,6 +394,7 @@ export default function Flow() {
       }
       setMessages(prev => [...prev, { role: 'assistant', ...parsed }])
       setChatHistory(prev => [...prev, { role: 'assistant', content: rawReply }])
+      speakText(parsed.text || rawReply)
     } catch {
       pushMsg('assistant', 'Något gick fel. Försök igen.')
     } finally {
@@ -409,10 +438,22 @@ export default function Flow() {
             <p style={{ fontSize: 11, color: '#334155', marginTop: 1 }}>Din AI-coach</p>
           </div>
         </div>
-        <motion.button onClick={() => setShowResetConfirm(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-          style={{ fontSize: 12, color: '#475569', padding: '6px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, fontWeight: 500, cursor: 'pointer' }}>
-          Börja om
-        </motion.button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <motion.button
+            onClick={() => {
+              if (voicePlaying && audioRef.current) { audioRef.current.pause(); setVoicePlaying(false) }
+              setVoiceMuted(m => !m)
+            }}
+            whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }}
+            title={voiceMuted ? 'Aktivera röst' : 'Stäng av röst'}
+            style={{ width: 32, height: 32, borderRadius: 10, background: voiceMuted ? 'rgba(255,255,255,0.04)' : 'rgba(0,212,170,0.1)', border: `1px solid ${voiceMuted ? 'rgba(255,255,255,0.07)' : 'rgba(0,212,170,0.3)'}`, color: voiceMuted ? '#475569' : '#00d4aa', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {voiceMuted ? '🔇' : voicePlaying ? '🔊' : '🔈'}
+          </motion.button>
+          <motion.button onClick={() => setShowResetConfirm(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+            style={{ fontSize: 12, color: '#475569', padding: '6px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, fontWeight: 500, cursor: 'pointer' }}>
+            Börja om
+          </motion.button>
+        </div>
       </div>
 
       <AnimatePresence>
