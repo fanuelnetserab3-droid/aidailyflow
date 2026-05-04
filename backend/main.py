@@ -51,7 +51,7 @@ def _migrate(eng):
 
 _migrate(engine)
 
-from routers import auth, profile, chat, schedule, thoughts, lists, habits, milestones, subscription, tts
+from routers import auth, profile, chat, schedule, thoughts, lists, habits, milestones, subscription
 
 app = FastAPI(title="AiDailyFlow API")
 
@@ -73,7 +73,6 @@ app.include_router(lists.router, prefix="/api/lists", tags=["lists"])
 app.include_router(habits.router, prefix="/api/habits", tags=["habits"])
 app.include_router(milestones.router, prefix="/api/milestones", tags=["milestones"])
 app.include_router(subscription.router, prefix="/api/subscription", tags=["subscription"])
-app.include_router(tts.router, prefix="/api/tts", tags=["tts"])
 
 
 @app.get("/api/health")

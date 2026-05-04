@@ -32,23 +32,6 @@ function ProfilIcon({ active }) {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
 }
 
-function Stars() {
-  const stars = Array.from({ length: 50 }, (_, i) => ({
-    x: (i * 41 + 7) % 100, y: (i * 53 + 11) % 100,
-    s: ((i * 13) % 3) * 0.5 + 0.3, d: ((i * 7) % 30) / 10,
-  }))
-  return (
-    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1 }}>
-      {stars.map((s, i) => (
-        <motion.div key={i}
-          style={{ position: 'absolute', left: `${s.x}%`, top: `${s.y}%`, width: s.s, height: s.s, borderRadius: 999, background: '#fff' }}
-          animate={{ opacity: [0.05, 0.4, 0.05] }}
-          transition={{ duration: 2.4 + s.d, repeat: Infinity, delay: s.d }}
-        />
-      ))}
-    </div>
-  )
-}
 
 export default function Layout() {
   const { logout, loginSuccess } = useAuth()
@@ -124,11 +107,9 @@ export default function Layout() {
       </AnimatePresence>
 
       <video autoPlay loop muted playsInline
-        style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none', opacity: 1, filter: 'brightness(0.75) saturate(1.1)' }}>
+        style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none', opacity: 1, filter: 'brightness(0.38) saturate(1.2)' }}>
         <source src="/waves.mp4" type="video/mp4" />
       </video>
-
-      <Stars />
 
       <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleLogout}
         style={{ position: 'fixed', top: 16, right: 16, zIndex: 200, background: 'rgba(17,17,24,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '6px 12px', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
