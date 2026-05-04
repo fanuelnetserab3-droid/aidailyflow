@@ -11,7 +11,10 @@ from database import engine, Base
 import models
 from sqlalchemy import inspect, text
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"DB init warning: {e}")
 
 
 def _migrate(eng):
@@ -49,7 +52,10 @@ def _migrate(eng):
                 pass
 
 
-_migrate(engine)
+try:
+    _migrate(engine)
+except Exception as e:
+    print(f"Migration warning: {e}")
 
 from routers import auth, profile, chat, schedule, thoughts, lists, habits, milestones, subscription
 
