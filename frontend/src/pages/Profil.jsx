@@ -579,6 +579,7 @@ export default function Profil() {
                     ))}
                   </select>
                   <div style={{ textAlign: 'center', marginTop: 12 }}>
+                    <button
                     onClick={() => {
                       const testText = 'Hej! Det här är ett test av rösten. Hur låter den?'
                       const speak = (voices) => {
