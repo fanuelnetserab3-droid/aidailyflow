@@ -356,7 +356,7 @@ export default function Flow() {
     const newHistory = [...chatHistory, { role: 'user', content: text }]
     setChatHistory(newHistory)
     try {
-      const res = await axios.post('/api/chat', { messages: newHistory, profile })
+      const res = await axios.post('/api/chat', { messages: newHistory, profile }, { timeout: 120000 })
       const rawReply = res.data.raw || res.data.reply
       const parsed = parseMessageContent(rawReply)
       if (res.data.schedule) {

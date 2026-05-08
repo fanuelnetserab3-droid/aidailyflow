@@ -67,6 +67,28 @@ TOOLS = [
         }
     },
     {
+        "name": "update_week_schedule",
+        "description": "Skapar schema för ALLA 7 dagar på en gång. Använd detta ALLTID när du skapar ett veckoschema - aldrig update_schedule 7 gånger.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "days": {
+                    "type": "array",
+                    "description": "Lista med 7 dagar, varje dag har date och tasks",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "date": {"type": "string", "description": "ISO-datum YYYY-MM-DD"},
+                            "tasks": {"type": "array", "description": "Max 6 uppgifter för denna dag"}
+                        },
+                        "required": ["date", "tasks"]
+                    }
+                }
+            },
+            "required": ["days"]
+        }
+    },
+    {
         "name": "delete_schedule",
         "description": "Tar bort alla uppgifter för ett datum.",
         "input_schema": {
@@ -127,15 +149,13 @@ Fråga ALDRIG om vaknar, sömn, träning, jobb, skills, budget eller tidsram - d
 När användaren säger "Skapa mitt schema" eller liknande - läs profilen och skapa schemat DIREKT med create_task.
 
 SCHEMA-SKAPANDE - GÖR DETTA DIREKT (SNABBT):
-1. Använd update_schedule (INTE create_task) - det sätter ALLA uppgifter på en gång per dag
-2. Kalla update_schedule för dag 1 ({today_date}) med alla 6 uppgifter i tasks-arrayen
-3. Kalla update_schedule för dag 2 (imorgon) med alla 6 uppgifter
-4. Fortsätt för dag 3-7 (totalt 7 anrop)
-5. Kalla save_milestones med alla 6 milstolpar i ett enda anrop
-6. Skriv BARA 1-2 meningar efteråt. Avsluta med exakt [Gå till schemat]
+1. Kalla update_week_schedule MED ALLA 7 DAGAR I ETT ENDA ANROP - aldrig update_schedule 7 gånger
+2. Kalla save_milestones med alla 6 milstolpar i ett enda anrop
+3. Skriv BARA 1-2 meningar efteråt. Avsluta med exakt [Gå till schemat]
 
-KRITISKT: Använd ALDRIG create_task när du skapar schemat - det är för långsamt.
-Använd update_schedule med tasks=[{title,category,start,end,period,subtasks:[],links:[],done:false}, ...]
+KRITISKT: Använd ALDRIG create_task eller update_schedule när du skapar veckoschemat.
+Använd update_week_schedule med days=[{date, tasks:[{title,category,start,end,period,subtasks:[],links:[],done:false},...]}]
+Detta är OBLIGATORISKT för att undvika timeout - allt på en gång!
 
 DAGLIGT SCHEMA - bygg baserat på profilen, MAX 6 uppgifter per dag:
 - Morgonrutin: wake_time → wake_time+30min (kategori: morgon)
@@ -250,6 +270,27 @@ def _exec_update_schedule(db: Session, user_id: int, inp: dict) -> dict:
     return {"ok": True, "date": inp["date"], "count": len(tasks)}
 
 
+def _exec_update_week_schedule(db: Session, user_id: int, inp: dict) -> dict:
+    days = inp.get("days", [])
+    saved = 0
+    for day in days:
+        day_date = day.get("date")
+        tasks = [dict(t, done=t.get("done", False)) for t in day.get("tasks", [])]
+        if not day_date:
+            continue
+        s = db.query(models.Schedule).filter(
+            models.Schedule.user_id == user_id,
+            models.Schedule.date == day_date,
+        ).first()
+        if s:
+            s.tasks = tasks
+        else:
+            db.add(models.Schedule(user_id=user_id, date=day_date, timeframe="Idag", tasks=tasks))
+        saved += 1
+    db.commit()
+    return {"ok": True, "days_saved": saved}
+
+
 def _exec_delete_schedule(db: Session, user_id: int, inp: dict) -> dict:
     s = db.query(models.Schedule).filter(
         models.Schedule.user_id == user_id,
@@ -323,57 +364,12 @@ def _dispatch(name: str, inp: dict, db: Session, user_id: int) -> dict:
         return _exec_get_schedule(db, user_id, inp)
     if name == "update_schedule":
         return _exec_update_schedule(db, user_id, inp)
+    if name == "update_week_schedule":
+        return _exec_update_week_schedule(db, user_id, inp)
     if name == "delete_schedule":
         return _exec_delete_schedule(db, user_id, inp)
     if name == "get_user_profile":
         return _exec_get_profile(db, user_id)
     if name == "analyze_progress":
         return _exec_analyze_progress(db, user_id)
-    if name == "save_milestones":
-        return _exec_save_milestones(db, user_id, inp)
-    return {"error": f"Okänt verktyg: {name}"}
-
-
-def run_agent(messages: list, user_id: int, db: Session) -> str:
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    client = anthropic.Anthropic(api_key=api_key)
-
-    today = _get_sweden_today()
-    profile = _exec_get_profile(db, user_id)
-
-    system = SYSTEM_PROMPT.format(
-        today_date=today.isoformat(),
-        today_weekday=_get_sweden_weekday(),
-        profile=_profile_to_str(profile),
-    )
-
-    claude_messages = list(messages)
-
-    for _ in range(25):
-        response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=4096,
-            system=system,
-            tools=TOOLS,
-            messages=claude_messages,
-        )
-
-        if response.stop_reason == "end_turn":
-            return "".join(b.text for b in response.content if hasattr(b, "text"))
-
-        if response.stop_reason == "tool_use":
-            claude_messages.append({"role": "assistant", "content": response.content})
-            results = []
-            for block in response.content:
-                if block.type == "tool_use":
-                    result = _dispatch(block.name, block.input, db, user_id)
-                    results.append({
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": json.dumps(result, ensure_ascii=False),
-                    })
-            claude_messages.append({"role": "user", "content": results})
-        else:
-            break
-
-    return "Förlåt, något gick fel. Försök igen."
+    if name == "save_milestone
