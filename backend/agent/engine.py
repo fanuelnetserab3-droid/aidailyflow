@@ -140,18 +140,19 @@ SYSTEM_PROMPT = """Du är Flow, en smart personlig AI-coach för svenska använd
 
 Dagens datum: {today_date} ({today_weekday})
 
-ANVÄNDARPROFIL (redan insamlad - fråga ALDRIG om detta igen):
+ANVÄNDARPROFIL (redan inladdad - använd direkt):
 {profile}
 
-ABSOLUT KRITISK REGEL:
-Profilen ovan innehåller ALL information du behöver.
-Fråga ALDRIG om vaknar, sömn, träning, jobb, skills, budget eller tidsram - det finns redan i profilen.
-När användaren säger "Skapa mitt schema" eller liknande - läs profilen och skapa schemat DIREKT med create_task.
+ABSOLUT KRITISK REGEL - TIMEOUT-FÖREBYGGANDE:
+- Kalla ALDRIG get_user_profile - profilen finns redan ovan
+- Kalla update_week_schedule OCH save_milestones i SAMMA svar (parallellt)
+- Totalt max 2 API-anrop: ett för verktygen, ett för slutsvaret
 
-SCHEMA-SKAPANDE - GÖR DETTA DIREKT (SNABBT):
-1. Kalla update_week_schedule MED ALLA 7 DAGAR I ETT ENDA ANROP - aldrig update_schedule 7 gånger
-2. Kalla save_milestones med alla 6 milstolpar i ett enda anrop
-3. Skriv BARA 1-2 meningar efteråt. Avsluta med exakt [Gå till schemat]
+SCHEMA-SKAPANDE - GÖR EXAKT SÅ HÄR:
+1. Anropa update_week_schedule OCH save_milestones SAMTIDIGT i samma svar
+2. Skriv BARA 1-2 meningar efteråt. Avsluta med exakt [Gå till schemat]
+
+ALDRIG: create_task, update_schedule, eller get_user_profile vid schemaskapande.
 
 KRITISKT: Använd ALDRIG create_task eller update_schedule när du skapar veckoschemat.
 Använd update_week_schedule med days=[{date, tasks:[{title,category,start,end,period,subtasks:[],links:[],done:false},...]}]
@@ -372,4 +373,51 @@ def _dispatch(name: str, inp: dict, db: Session, user_id: int) -> dict:
         return _exec_get_profile(db, user_id)
     if name == "analyze_progress":
         return _exec_analyze_progress(db, user_id)
-    if name == "save_milestone
+    if name == "save_milestones":
+        return _exec_save_milestones(db, user_id, inp)
+    return {"error": f"Okänt verktyg: {name}"}
+
+
+def run_agent(messages: list, user_id: int, db: Session) -> str:
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    client = anthropic.Anthropic(api_key=api_key)
+
+    today = _get_sweden_today()
+    profile = _exec_get_profile(db, user_id)
+
+    system = SYSTEM_PROMPT.format(
+        today_date=today.isoformat(),
+        today_weekday=_get_sweden_weekday(),
+        profile=_profile_to_str(profile),
+    )
+
+    claude_messages = list(messages)
+
+    for _ in range(25):
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=4096,
+            system=system,
+            tools=TOOLS,
+            messages=claude_messages,
+        )
+
+        if response.stop_reason == "end_turn":
+            return "".join(b.text for b in response.content if hasattr(b, "text"))
+
+        if response.stop_reason == "tool_use":
+            claude_messages.append({"role": "assistant", "content": response.content})
+            results = []
+            for block in response.content:
+                if block.type == "tool_use":
+                    result = _dispatch(block.name, block.input, db, user_id)
+                    results.append({
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": json.dumps(result, ensure_ascii=False),
+                    })
+            claude_messages.append({"role": "user", "content": results})
+        else:
+            break
+
+    return "Förlåt, något gick fel. Försök igen."
