@@ -7,79 +7,30 @@ from sqlalchemy.orm import Session
 import models
 
 def _get_sweden_today() -> date:
-    """Returnerar dagens datum i Sverige (hanterar UTC vs CET/CEST)."""
     tz = zoneinfo.ZoneInfo("Europe/Stockholm")
     return datetime.now(tz).date()
 
 def _get_sweden_weekday() -> str:
-    """Returnerar veckodagsnamn på svenska baserat på svensk tid."""
     tz = zoneinfo.ZoneInfo("Europe/Stockholm")
-    idx = datetime.now(tz).weekday()  # 0=Måndag, 6=Söndag
+    idx = datetime.now(tz).weekday()
     return WEEKDAYS_SV[idx]
 
 WEEKDAYS_SV = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag", "Söndag"]
 
 TOOLS = [
     {
-        "name": "create_task",
-        "description": "Skapar en uppgift för ett specifikt datum i databasen.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "date": {"type": "string", "description": "ISO-datum YYYY-MM-DD"},
-                "title": {"type": "string"},
-                "start": {"type": "string", "description": "Starttid HH:MM"},
-                "end": {"type": "string", "description": "Sluttid HH:MM"},
-                "period": {"type": "string", "description": "Visningsperiod t.ex. '09:00–10:00'"},
-                "category": {"type": "string", "description": "morgon|jobb|lärande|träning|mat|reflektion|paus"},
-                "subtasks": {"type": "array", "items": {"type": "string"}},
-                "links": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {"label": {"type": "string"}, "url": {"type": "string"}},
-                        "required": ["label", "url"]
-                    }
-                }
-            },
-            "required": ["date", "title", "category"]
-        }
-    },
-    {
-        "name": "get_schedule",
-        "description": "Hämtar alla uppgifter för ett datum.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"date": {"type": "string", "description": "ISO-datum YYYY-MM-DD"}},
-            "required": ["date"]
-        }
-    },
-    {
-        "name": "update_schedule",
-        "description": "Ersätter hela schemat för ett datum med en ny lista uppgifter.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "date": {"type": "string"},
-                "tasks": {"type": "array", "description": "Fullständig lista med tasks"}
-            },
-            "required": ["date", "tasks"]
-        }
-    },
-    {
         "name": "update_week_schedule",
-        "description": "Skapar schema för ALLA 7 dagar på en gång. Använd detta ALLTID när du skapar ett veckoschema - aldrig update_schedule 7 gånger.",
+        "description": "Skapar schema för ALLA 7 dagar på en gång. Använd detta ALLTID vid veckoschemaskapande.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "days": {
                     "type": "array",
-                    "description": "Lista med 7 dagar, varje dag har date och tasks",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "date": {"type": "string", "description": "ISO-datum YYYY-MM-DD"},
-                            "tasks": {"type": "array", "description": "Max 6 uppgifter för denna dag"}
+                            "date": {"type": "string"},
+                            "tasks": {"type": "array"}
                         },
                         "required": ["date", "tasks"]
                     }
@@ -89,8 +40,20 @@ TOOLS = [
         }
     },
     {
-        "name": "delete_schedule",
-        "description": "Tar bort alla uppgifter för ett datum.",
+        "name": "update_schedule",
+        "description": "Ersätter schemat för ETT datum.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "date": {"type": "string"},
+                "tasks": {"type": "array"}
+            },
+            "required": ["date", "tasks"]
+        }
+    },
+    {
+        "name": "get_schedule",
+        "description": "Hämtar uppgifter för ett datum.",
         "input_schema": {
             "type": "object",
             "properties": {"date": {"type": "string"}},
@@ -98,18 +61,8 @@ TOOLS = [
         }
     },
     {
-        "name": "get_user_profile",
-        "description": "Hämtar användarens fullständiga profil med mål, situation och preferenser.",
-        "input_schema": {"type": "object", "properties": {}, "required": []}
-    },
-    {
-        "name": "analyze_progress",
-        "description": "Analyserar användarens framsteg senaste 7 dagarna.",
-        "input_schema": {"type": "object", "properties": {}, "required": []}
-    },
-    {
         "name": "save_milestones",
-        "description": "Sparar månads- eller kvartalsmilstolpar för långsiktig planering.",
+        "description": "Sparar milstolpar för långsiktig planering.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -121,11 +74,7 @@ TOOLS = [
                             "month": {"type": "integer"},
                             "period": {"type": "string"},
                             "title": {"type": "string"},
-                            "goals": {"type": "array", "items": {"type": "string"}},
-                            "resources": {
-                                "type": "array",
-                                "items": {"type": "object", "properties": {"label": {"type": "string"}, "url": {"type": "string"}}}
-                            }
+                            "goals": {"type": "array", "items": {"type": "string"}}
                         },
                         "required": ["month", "period", "title", "goals"]
                     }
@@ -133,70 +82,27 @@ TOOLS = [
             },
             "required": ["milestones"]
         }
+    },
+    {
+        "name": "analyze_progress",
+        "description": "Analyserar framsteg senaste 7 dagarna.",
+        "input_schema": {"type": "object", "properties": {}, "required": []}
     }
 ]
 
-SYSTEM_PROMPT = """Du är Flow, en smart personlig AI-coach för svenska användare. Kortfattad, varm och direkt.
+SYSTEM_PROMPT = """Du är Flow, en smart personlig AI-coach. Kortfattad, varm, direkt. Svarar alltid på svenska.
 
 Dagens datum: {today_date} ({today_weekday})
 
-ANVÄNDARPROFIL (redan inladdad - använd direkt):
+ANVÄNDARPROFIL:
 {profile}
 
-ABSOLUT KRITISK REGEL - TIMEOUT-FÖREBYGGANDE:
+REGLER:
 - Kalla ALDRIG get_user_profile - profilen finns redan ovan
-- Kalla update_week_schedule OCH save_milestones i SAMMA svar (parallellt)
-- Totalt max 2 API-anrop: ett för verktygen, ett för slutsvaret
-
-SCHEMA-SKAPANDE - GÖR EXAKT SÅ HÄR:
-1. Anropa update_week_schedule OCH save_milestones SAMTIDIGT i samma svar
-2. Skriv BARA 1-2 meningar efteråt. Avsluta med exakt [Gå till schemat]
-
-ALDRIG: create_task, update_schedule, eller get_user_profile vid schemaskapande.
-
-KRITISKT: Använd ALDRIG create_task eller update_schedule när du skapar veckoschemat.
-Använd update_week_schedule med days=[{date, tasks:[{title,category,start,end,period,subtasks:[],links:[],done:false},...]}]
-Detta är OBLIGATORISKT för att undvika timeout - allt på en gång!
-
-DAGLIGT SCHEMA - bygg baserat på profilen, MAX 6 uppgifter per dag:
-- Morgonrutin: wake_time → wake_time+30min (kategori: morgon)
-- Frukost: wake_time+30min → wake_time+1h (kategori: mat)
-- Träning: om training != "Tränar inte" (kategori: träning)
-- Deep Work: 2h lärande på skills (kategori: lärande)
-- Lunch: 1h (kategori: mat)
-- Kvällsreflektion: 20min innan sovtid (kategori: reflektion)
-
-FÖR 7 UNIKA DAGAR:
-Dag 1 ({today_date}): Deep Work = "Setup och grunder - installera verktyg"
-Dag 2: Deep Work = "Fördjupning i [skill 1]"
-Dag 3: Deep Work = "Bygg något konkret"
-Dag 4: Deep Work = "[Skill 2] - nytt område"
-Dag 5: Deep Work = "Projektdag - bygg ett riktigt projekt"
-Dag 6: Deep Work = "Nätverkande - LinkedIn och communities"
-Dag 7: Deep Work = "Veckoreflexion och planering"
-
-Kalla save_milestones med 6 milstolpar i ETT anrop.
-
-SMARTA FÖLJDFRÅGOR (bara om användaren tar upp något nytt):
-- Nämner specifik tid → bekräfta och använd den
-- Ber om justering → justera och uppdatera med update_schedule
-- Ber om motivation → ge kort och kraftfull motivering
-
-CHIP-REGLER:
-- Format: [Alternativ] i slutet av frågan
-- Max 2-3 meningar per svar
-- Fråga bara om saker som INTE finns i profilen
-
-RESURSLÄNKAR (välj relevanta):
-No-Code: https://make.com och https://bubble.io
-AI Content: https://claude.ai
-Python: https://cs50.harvard.edu/python
-Design: https://www.figma.com/resources/learn-design
-Marknadsföring: https://learndigital.withgoogle.com/digitalgarage
-Träning: https://www.youtube.com/@JeffNippard
-Jobb: https://www.linkedin.com/jobs
-
-ALLTID: Svenska, inga emojis, inga asterisker, varm ton."""
+- Vid schemaskapande: kalla update_week_schedule + save_milestones SAMTIDIGT
+- Max 6 uppgifter per dag: morgon, frukost, träning, deep work, lunch, reflektion
+- Avsluta schemasvar med exakt: [Gå till schemat]
+- Max 2-3 meningar per svar, inga emojis, inga asterisker"""
 
 
 def _profile_to_str(profile: dict) -> str:
@@ -207,68 +113,17 @@ def _profile_to_str(profile: dict) -> str:
         "name": "Namn", "age": "Ålder", "situation": "Situation",
         "goals": "Mål", "wake_time": "Vaknar", "sleep_hours": "Sömn",
         "training": "Träning", "training_type": "Träningstyp",
-        "training_duration": "Träningstid", "gym_distance": "Avstånd till gym",
-        "job_type": "Jobb", "job_hours": "Jobbtimmar", "job_commute": "Pendling jobb",
-        "skills": "Skills/Yrke", "learning_hours": "Lärande per dag",
+        "training_duration": "Träningstid", "gym_distance": "Avstånd",
+        "job_type": "Jobb", "job_hours": "Jobbtimmar", "job_commute": "Pendling",
+        "skills": "Skills", "learning_hours": "Lärande/dag",
         "budget": "Budget", "timeframe": "Tidsram", "education": "Utbildning",
-        "experience": "Erfarenhet", "discipline": "Disciplin", "work_style": "Arbetsstil",
+        "experience": "Erfarenhet", "discipline": "Disciplin", "work_style": "Stil",
     }
     for k, v in profile.items():
         if v and k != "completed":
             label = field_names.get(k, k)
             lines.append(f"{label}: {v}")
     return "\n".join(lines) if lines else "Ingen profil ännu."
-
-
-def _exec_create_task(db: Session, user_id: int, inp: dict) -> dict:
-    task_date = inp["date"]
-    start = inp.get("start", "")
-    end = inp.get("end", "")
-    period = inp.get("period") or (f"{start}–{end}" if start and end else "")
-    new_task = {
-        "title": inp["title"],
-        "category": inp.get("category", "jobb"),
-        "start": start,
-        "end": end,
-        "period": period,
-        "subtasks": inp.get("subtasks", []),
-        "links": inp.get("links", []),
-        "done": False,
-    }
-    existing = db.query(models.Schedule).filter(
-        models.Schedule.user_id == user_id,
-        models.Schedule.date == task_date,
-    ).first()
-    if existing:
-        tasks = list(existing.tasks or [])
-        tasks.append(new_task)
-        existing.tasks = tasks
-    else:
-        db.add(models.Schedule(user_id=user_id, date=task_date, timeframe="Idag", tasks=[new_task]))
-    db.commit()
-    return {"ok": True, "date": task_date, "title": new_task["title"]}
-
-
-def _exec_get_schedule(db: Session, user_id: int, inp: dict) -> dict:
-    s = db.query(models.Schedule).filter(
-        models.Schedule.user_id == user_id,
-        models.Schedule.date == inp["date"],
-    ).first()
-    return {"date": inp["date"], "tasks": s.tasks or [] if s else []}
-
-
-def _exec_update_schedule(db: Session, user_id: int, inp: dict) -> dict:
-    tasks = [dict(t, done=t.get("done", False)) for t in inp.get("tasks", [])]
-    s = db.query(models.Schedule).filter(
-        models.Schedule.user_id == user_id,
-        models.Schedule.date == inp["date"],
-    ).first()
-    if s:
-        s.tasks = tasks
-    else:
-        db.add(models.Schedule(user_id=user_id, date=inp["date"], timeframe="Idag", tasks=tasks))
-    db.commit()
-    return {"ok": True, "date": inp["date"], "count": len(tasks)}
 
 
 def _exec_update_week_schedule(db: Session, user_id: int, inp: dict) -> dict:
@@ -292,15 +147,26 @@ def _exec_update_week_schedule(db: Session, user_id: int, inp: dict) -> dict:
     return {"ok": True, "days_saved": saved}
 
 
-def _exec_delete_schedule(db: Session, user_id: int, inp: dict) -> dict:
+def _exec_update_schedule(db: Session, user_id: int, inp: dict) -> dict:
+    tasks = [dict(t, done=t.get("done", False)) for t in inp.get("tasks", [])]
     s = db.query(models.Schedule).filter(
         models.Schedule.user_id == user_id,
         models.Schedule.date == inp["date"],
     ).first()
     if s:
-        s.tasks = []
-        db.commit()
-    return {"ok": True, "date": inp["date"]}
+        s.tasks = tasks
+    else:
+        db.add(models.Schedule(user_id=user_id, date=inp["date"], timeframe="Idag", tasks=tasks))
+    db.commit()
+    return {"ok": True, "date": inp["date"], "count": len(tasks)}
+
+
+def _exec_get_schedule(db: Session, user_id: int, inp: dict) -> dict:
+    s = db.query(models.Schedule).filter(
+        models.Schedule.user_id == user_id,
+        models.Schedule.date == inp["date"],
+    ).first()
+    return {"date": inp["date"], "tasks": s.tasks or [] if s else []}
 
 
 def _exec_get_profile(db: Session, user_id: int) -> dict:
@@ -309,12 +175,8 @@ def _exec_get_profile(db: Session, user_id: int) -> dict:
         return {}
     result = {}
     for col in ["name", "age", "situation", "goals", "education", "experience",
-                "budget", "time_per_day", "discipline", "work_style"]:
-        val = getattr(p, col, None)
-        if val:
-            result[col] = val
-    # Extra fields stored in profile
-    for col in ["wake_time", "sleep_hours", "training", "training_type",
+                "budget", "time_per_day", "discipline", "work_style",
+                "wake_time", "sleep_hours", "training", "training_type",
                 "training_duration", "gym_distance", "job_type", "job_hours",
                 "job_commute", "skills", "learning_hours", "timeframe"]:
         val = getattr(p, col, None)
@@ -340,11 +202,7 @@ def _exec_analyze_progress(db: Session, user_id: int) -> dict:
             total += len(s.tasks)
             daily.append({"date": d, "done": done, "total": len(s.tasks)})
     pct = round(total_done / total * 100) if total > 0 else 0
-    return {
-        "summary": f"{total_done} av {total} uppgifter avklarade senaste 7 dagarna ({pct}%)",
-        "completion_rate": pct,
-        "daily": daily,
-    }
+    return {"summary": f"{total_done} av {total} uppgifter ({pct}%)", "completion_rate": pct, "daily": daily}
 
 
 def _exec_save_milestones(db: Session, user_id: int, inp: dict) -> dict:
@@ -359,20 +217,74 @@ def _exec_save_milestones(db: Session, user_id: int, inp: dict) -> dict:
 
 
 def _dispatch(name: str, inp: dict, db: Session, user_id: int) -> dict:
-    if name == "create_task":
-        return _exec_create_task(db, user_id, inp)
-    if name == "get_schedule":
-        return _exec_get_schedule(db, user_id, inp)
-    if name == "update_schedule":
-        return _exec_update_schedule(db, user_id, inp)
     if name == "update_week_schedule":
         return _exec_update_week_schedule(db, user_id, inp)
-    if name == "delete_schedule":
-        return _exec_delete_schedule(db, user_id, inp)
+    if name == "update_schedule":
+        return _exec_update_schedule(db, user_id, inp)
+    if name == "get_schedule":
+        return _exec_get_schedule(db, user_id, inp)
     if name == "get_user_profile":
         return _exec_get_profile(db, user_id)
     if name == "analyze_progress":
         return _exec_analyze_progress(db, user_id)
     if name == "save_milestones":
         return _exec_save_milestones(db, user_id, inp)
-    return {"error": f
+    return {"error": f"Okänt verktyg: {name}"}
+
+
+def run_agent(messages: list, user_id: int, db: Session) -> str:
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return "FEL: ANTHROPIC_API_KEY saknas."
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+    except Exception as e:
+        return f"FEL klient: {str(e)}"
+
+    today = _get_sweden_today()
+    profile = _exec_get_profile(db, user_id)
+    system = SYSTEM_PROMPT.format(
+        today_date=today.isoformat(),
+        today_weekday=_get_sweden_weekday(),
+        profile=_profile_to_str(profile),
+    )
+
+    claude_messages = list(messages)
+
+    for _ in range(10):
+        try:
+            response = client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=4096,
+                system=system,
+                tools=TOOLS,
+                messages=claude_messages,
+            )
+        except anthropic.APIStatusError as e:
+            return f"FEL API {e.status_code}: {e.message}"
+        except Exception as e:
+            return f"FEL ({type(e).__name__}): {str(e)}"
+
+        if response.stop_reason == "end_turn":
+            return "".join(b.text for b in response.content if hasattr(b, "text"))
+
+        if response.stop_reason == "tool_use":
+            claude_messages.append({"role": "assistant", "content": response.content})
+            results = []
+            for block in response.content:
+                if block.type == "tool_use":
+                    try:
+                        result = _dispatch(block.name, block.input, db, user_id)
+                    except Exception as e:
+                        result = {"error": f"Verktygsfel {block.name}: {str(e)}"}
+                    results.append({
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": json.dumps(result, ensure_ascii=False),
+                    })
+            claude_messages.append({"role": "user", "content": results})
+        else:
+            break
+
+    return "Förlåt, något gick fel internt. Försök igen."
