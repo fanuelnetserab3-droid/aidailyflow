@@ -20,7 +20,7 @@ WEEKDAYS_SV = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag", "S
 TOOLS = [
     {
         "name": "update_week_schedule",
-        "description": "Skapar schema för ALLA 7 dagar på en gång. Använd detta ALLTID vid veckoschemaskapande - aldrig update_schedule 7 gånger.",
+        "description": "Skapar schema for ALLA 7 dagar pa en gang. Anvand ALLTID vid veckoschemaskapande.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -38,10 +38,10 @@ TOOLS = [
                                     "type": "object",
                                     "properties": {
                                         "title": {"type": "string"},
-                                        "category": {"type": "string", "description": "morgon|mat|träning|lärande|jobb|reflektion|paus"},
+                                        "category": {"type": "string", "description": "morgon|mat|traning|larande|jobb|reflektion|paus"},
                                         "start": {"type": "string", "description": "HH:MM"},
                                         "end": {"type": "string", "description": "HH:MM"},
-                                        "period": {"type": "string", "description": "t.ex. 07:00-07:30"},
+                                        "period": {"type": "string"},
                                         "subtasks": {"type": "array", "items": {"type": "string"}},
                                         "done": {"type": "boolean"}
                                     },
@@ -58,7 +58,7 @@ TOOLS = [
     },
     {
         "name": "update_schedule",
-        "description": "Ersätter schemat för ETT datum. Använd vid justeringar.",
+        "description": "Ersatter schemat for ETT datum. Anvand vid justeringar.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -85,7 +85,7 @@ TOOLS = [
     },
     {
         "name": "get_schedule",
-        "description": "Hämtar uppgifter för ett datum.",
+        "description": "Hamtar uppgifter for ett datum.",
         "input_schema": {
             "type": "object",
             "properties": {"date": {"type": "string"}},
@@ -94,7 +94,7 @@ TOOLS = [
     },
     {
         "name": "save_milestones",
-        "description": "Sparar milstolpar för långsiktig planering.",
+        "description": "Sparar milstolpar for langsiktig planering.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -122,7 +122,7 @@ TOOLS = [
     }
 ]
 
-SYSTEM_PROMPT = """Du är Flow, en smart personlig AI-coach. Kortfattad, varm, direkt. Svarar alltid på svenska.
+SYSTEM_PROMPT = """Du ar Flow, en smart personlig AI-coach. Kortfattad, varm, direkt. Svarar alltid pa svenska.
 
 Dagens datum: {today_date} ({today_weekday})
 
@@ -131,36 +131,34 @@ ANVÄNDARPROFIL:
 
 ABSOLUTA REGLER:
 - Kalla ALDRIG get_user_profile - profilen finns redan ovan
-- Vid schemaskapande: kalla update_week_schedule + save_milestones i SAMMA svar (parallellt)
-- Avsluta alltid schemasvar med exakt texten: [Gå till schemat]
+- Vid schemaskapande: kalla update_week_schedule + save_milestones i SAMMA svar
 - Max 2 meningar text efter verktygsanropen
 
 SCHEMA-FORMAT (update_week_schedule):
-Varje dag ska ha exakt dessa 6 uppgifter som OBJEKT med title, category, start, end, period:
-1. Morgonrutin — category: morgon, start: {wake}, end: {wake_30}
-2. Frukost — category: mat, start: {wake_30}, end: {wake_60}
-3. Träning — category: träning (hoppa över om ingen träning i profilen)
-4. Deep Work — category: lärande, 2 timmar
-5. Lunch — category: mat, 1 timme
-6. Kvällsreflektion — category: reflektion, 20 min
+Varje dag ska ha 6 uppgifter som OBJEKT med title, category, start, end, period:
+1. Morgonrutin - category: morgon, start: {wake}, end: {wake_30}
+2. Frukost - category: mat, start: {wake_30}, end: {wake_60}
+3. Traning - category: traning
+4. Deep Work - category: larande, 2 timmar
+5. Lunch - category: mat, 1 timme
+6. Kvallsreflektion - category: reflektion, 20 min
 
-EXEMPEL på korrekt task-objekt:
-{{"title": "Morgonrutin", "category": "morgon", "start": "07:00", "end": "07:30", "period": "07:00-07:30", "subtasks": [], "done": false}}
+Exempel task-objekt: {{"title": "Morgonrutin", "category": "morgon", "start": "07:00", "end": "07:30", "period": "07:00-07:30", "subtasks": [], "done": false}}
 
-ALDRIG skicka tasks som strängar - alltid som objekt."""
+SKICKA ALDRIG tasks som strangar - alltid som objekt med title och category."""
 
 
 def _profile_to_str(profile: dict) -> str:
     if not profile:
-        return "Ingen profil ännu."
+        return "Ingen profil annu."
     lines = []
     field_names = {
-        "name": "Namn", "age": "Ålder", "situation": "Situation",
-        "goals": "Mål", "wake_time": "Vaknar", "sleep_hours": "Sömn",
-        "training": "Träning", "training_type": "Träningstyp",
-        "training_duration": "Träningstid", "gym_distance": "Avstånd",
+        "name": "Namn", "age": "Alder", "situation": "Situation",
+        "goals": "Mal", "wake_time": "Vaknar", "sleep_hours": "Somn",
+        "training": "Traning", "training_type": "Traningstyp",
+        "training_duration": "Traningstid", "gym_distance": "Avstand",
         "job_type": "Jobb", "job_hours": "Jobbtimmar", "job_commute": "Pendling",
-        "skills": "Skills", "learning_hours": "Lärande/dag",
+        "skills": "Skills", "learning_hours": "Larande/dag",
         "budget": "Budget", "timeframe": "Tidsram", "education": "Utbildning",
         "experience": "Erfarenhet", "discipline": "Disciplin", "work_style": "Stil",
     }
@@ -168,20 +166,22 @@ def _profile_to_str(profile: dict) -> str:
         if v and k != "completed":
             label = field_names.get(k, k)
             lines.append(f"{label}: {v}")
-    return "\n".join(lines) if lines else "Ingen profil ännu."
+    return "\n".join(lines) if lines else "Ingen profil annu."
 
 
 def _normalize_task(t) -> dict:
-    """Hanterar tasks oavsett om de är strängar eller objekt."""
     if isinstance(t, str):
         return {"title": t, "category": "jobb", "start": "", "end": "", "period": "", "subtasks": [], "done": False}
     if isinstance(t, dict):
+        start = t.get("start", "")
+        end = t.get("end", "")
+        period = t.get("period", f"{start}-{end}".strip("-"))
         return {
             "title": t.get("title", "Uppgift"),
             "category": t.get("category", "jobb"),
-            "start": t.get("start", ""),
-            "end": t.get("end", ""),
-            "period": t.get("period", f"{t.get('start','')}–{t.get('end','')}".strip("–")),
+            "start": start,
+            "end": end,
+            "period": period,
             "subtasks": t.get("subtasks", []),
             "links": t.get("links", []),
             "done": t.get("done", False),
@@ -292,7 +292,7 @@ def _dispatch(name: str, inp: dict, db: Session, user_id: int) -> dict:
         return _exec_analyze_progress(db, user_id)
     if name == "save_milestones":
         return _exec_save_milestones(db, user_id, inp)
-    return {"error": f"Okänt verktyg: {name}"}
+    return {"error": f"Unknown tool: {name}"}
 
 
 def run_agent(messages: list, user_id: int, db: Session) -> str:
@@ -308,7 +308,6 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
     today = _get_sweden_today()
     profile = _exec_get_profile(db, user_id)
 
-    # Beräkna vakna-tider för system-prompten
     wake = profile.get("wake_time", "07:00")
     try:
         wh, wm = map(int, wake.split(":"))
@@ -328,6 +327,7 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
     )
 
     claude_messages = list(messages)
+    week_schedule_saved = False
 
     for _ in range(10):
         try:
@@ -344,7 +344,10 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
             return f"FEL ({type(e).__name__}): {str(e)}"
 
         if response.stop_reason == "end_turn":
-            return "".join(b.text for b in response.content if hasattr(b, "text"))
+            text = "".join(b.text for b in response.content if hasattr(b, "text"))
+            if week_schedule_saved and "[" not in text:
+                text = text.rstrip() + "\n\n[Ga till schemat]"
+            return text
 
         if response.stop_reason == "tool_use":
             claude_messages.append({"role": "assistant", "content": response.content})
@@ -353,8 +356,10 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
                 if block.type == "tool_use":
                     try:
                         result = _dispatch(block.name, block.input, db, user_id)
+                        if block.name == "update_week_schedule" and result.get("ok"):
+                            week_schedule_saved = True
                     except Exception as e:
-                        result = {"error": f"Verktygsfel {block.name}: {str(e)}"}
+                        result = {"error": f"Tool error {block.name}: {str(e)}"}
                     results.append({
                         "type": "tool_result",
                         "tool_use_id": block.id,
@@ -364,4 +369,4 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
         else:
             break
 
-    return "Förlåt, något gick fel internt. Försök igen."
+    return "Forlat, nagot gick fel internt. Forsok igen."
