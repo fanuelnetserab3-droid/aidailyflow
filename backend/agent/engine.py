@@ -326,21 +326,28 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
     def _parse_hours(val, default='1'):
         if not val:
             return default
-        return val.replace('h','').replace('+','').replace('timmar','').replace('timme','').strip() or default
+        cleaned = str(val).replace('h','').replace('+','').replace('timmar','').replace('timme','').replace('min','').strip()
+        return cleaned or default
 
     learning_h = _parse_hours(profile.get('learning_hours'), '2')
     training_h = _parse_hours(profile.get('training_duration'), '1')
 
-    system = SYSTEM_PROMPT.format(
-        today_date=today.isoformat(),
-        today_weekday=_get_sweden_weekday(),
-        profile=_profile_to_str(profile),
-        learning_h=learning_h,
-        training_h=training_h,
-        wake=wake,
-        wake_30=wake_30,
-        wake_60=wake_60,
-    )
+    # Escape curly braces in profile string to avoid format() errors
+    profile_str = _profile_to_str(profile).replace('{', '{{').replace('}', '}}')
+
+    try:
+        system = SYSTEM_PROMPT.format(
+            today_date=today.isoformat(),
+            today_weekday=_get_sweden_weekday(),
+            profile=profile_str,
+            learning_h=learning_h,
+            training_h=training_h,
+            wake=wake,
+            wake_30=wake_30,
+            wake_60=wake_60,
+        )
+    except Exception as e:
+        system = SYSTEM_PROMPT.replace('{profile}', profile_str).replace('{today_date}', today.isoformat()).replace('{today_weekday}', _get_sweden_weekday()).replace('{learning_h}', learning_h).replace('{training_h}', training_h).replace('{wake}', wake).replace('{wake_30}', wake_30).replace('{wake_60}', wake_60)
 
     claude_messages = list(messages)
     week_schedule_saved = False
