@@ -146,8 +146,8 @@ Varje dag ska ha 6 uppgifter som OBJEKT med title, category, start, end, period:
 1. Morgonrutin - category: morgon, start: {wake}, end: {wake_30}
 2. Frukost - category: mat, start: {wake_30}, end: {wake_60}
 3. Traning - category: traning, EXAKT {training_h} timmar
-4. Deep Work - category: larande, EXAKT {learning_h} timmar
-5. Lunch - category: mat, 1 timme
+4. Lunch - category: mat, 1 timme, ALLTID mellan 11:30 och 13:30 (aldrig efter 14:00)
+5. Deep Work - category: larande, EXAKT {learning_h} timmar (efter lunch)
 6. Kvallsreflektion - category: reflektion, 20 min
 
 Exempel task-objekt: {{"title": "Morgonrutin", "category": "morgon", "start": "07:00", "end": "07:30", "period": "07:00-07:30", "subtasks": [], "done": false}}
