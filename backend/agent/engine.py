@@ -366,11 +366,18 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
         except Exception as e:
             return f"FEL ({type(e).__name__}): {str(e)}"
 
-        if response.stop_reason == "end_turn":
+        if response.stop_reason in ("end_turn", "stop_sequence"):
             text = "".join(b.text for b in response.content if hasattr(b, "text"))
             if week_schedule_saved and "[Gå till schemat]" not in text:
                 text = text.rstrip() + "\n\n[Gå till schemat]"
-            return text
+            return text if text else "Klart!"
+
+        if response.stop_reason == "max_tokens":
+            # Hit token limit — return whatever text we have so far
+            text = "".join(b.text for b in response.content if hasattr(b, "text"))
+            if week_schedule_saved and "[Gå till schemat]" not in text:
+                text = text.rstrip() + "\n\n[Gå till schemat]"
+            return text if text else "Schema sparat!"
 
         if response.stop_reason == "tool_use":
             claude_messages.append({"role": "assistant", "content": response.content})
@@ -390,6 +397,14 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
                     })
             claude_messages.append({"role": "user", "content": results})
         else:
+            # Unknown stop reason — still return if we have text
+            text = "".join(b.text for b in response.content if hasattr(b, "text"))
+            if text:
+                if week_schedule_saved and "[Gå till schemat]" not in text:
+                    text = text.rstrip() + "\n\n[Gå till schemat]"
+                return text
             break
 
-    return "Forlat, nagot gick fel internt. Forsok igen."
+    if week_schedule_saved:
+        return "Schema skapat!\n\n[Gå till schemat]"
+    return "Ursäkta, något gick fel. Försök igen."
