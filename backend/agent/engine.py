@@ -134,13 +134,19 @@ ABSOLUTA REGLER:
 - Vid schemaskapande: kalla update_week_schedule + save_milestones i SAMMA svar
 - Schemat BORJAR fran idag ({today_date}) - dag 1 ar IDAG inte imorgon
 - Max 2 meningar text efter verktygsanropen
+- ANVAND EXAKT de timmar anvandaren valt - aldrig mer, aldrig mindre
+
+TIDREGLER (KRITISKT - felaktiga tider ar ett fel):
+- Deep Work / Larande: EXAKT {learning_h} timmar (anvandaren valde detta - respektera det)
+- Traning: EXAKT {training_h} timmar per pass
+- start och end maste reflektera ratt antal timmar, t.ex. 4h larande = start 09:00 end 13:00
 
 SCHEMA-FORMAT (update_week_schedule):
 Varje dag ska ha 6 uppgifter som OBJEKT med title, category, start, end, period:
 1. Morgonrutin - category: morgon, start: {wake}, end: {wake_30}
 2. Frukost - category: mat, start: {wake_30}, end: {wake_60}
-3. Traning - category: traning
-4. Deep Work - category: larande, {learning_h} timmar (baserat pa profilen)
+3. Traning - category: traning, EXAKT {training_h} timmar
+4. Deep Work - category: larande, EXAKT {learning_h} timmar
 5. Lunch - category: mat, 1 timme
 6. Kvallsreflektion - category: reflektion, 20 min
 
@@ -317,11 +323,20 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
         wake_30 = "07:30"
         wake_60 = "08:00"
 
+    def _parse_hours(val, default='1'):
+        if not val:
+            return default
+        return val.replace('h','').replace('+','').replace('timmar','').replace('timme','').strip() or default
+
+    learning_h = _parse_hours(profile.get('learning_hours'), '2')
+    training_h = _parse_hours(profile.get('training_duration'), '1')
+
     system = SYSTEM_PROMPT.format(
         today_date=today.isoformat(),
         today_weekday=_get_sweden_weekday(),
         profile=_profile_to_str(profile),
-        learning_h=profile.get('learning_hours', '2h').replace('h','').replace('+','').strip() or '2',
+        learning_h=learning_h,
+        training_h=training_h,
         wake=wake,
         wake_30=wake_30,
         wake_60=wake_60,
