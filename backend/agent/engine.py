@@ -132,6 +132,7 @@ ANVÄNDARPROFIL:
 ABSOLUTA REGLER:
 - Kalla ALDRIG get_user_profile - profilen finns redan ovan
 - Vid schemaskapande: kalla update_week_schedule + save_milestones i SAMMA svar
+- Schemat BORJAR fran idag ({today_date}) - dag 1 ar IDAG inte imorgon
 - Max 2 meningar text efter verktygsanropen
 
 SCHEMA-FORMAT (update_week_schedule):
@@ -139,7 +140,7 @@ Varje dag ska ha 6 uppgifter som OBJEKT med title, category, start, end, period:
 1. Morgonrutin - category: morgon, start: {wake}, end: {wake_30}
 2. Frukost - category: mat, start: {wake_30}, end: {wake_60}
 3. Traning - category: traning
-4. Deep Work - category: larande, 2 timmar
+4. Deep Work - category: larande, {learning_h} timmar (baserat pa profilen)
 5. Lunch - category: mat, 1 timme
 6. Kvallsreflektion - category: reflektion, 20 min
 
@@ -321,6 +322,7 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
         today_date=today.isoformat(),
         today_weekday=_get_sweden_weekday(),
         profile=_profile_to_str(profile),
+        learning_h=profile.get('learning_hours', '2h').replace('h','').replace('+','').strip() or '2',
         wake=wake,
         wake_30=wake_30,
         wake_60=wake_60,
@@ -346,7 +348,7 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
         if response.stop_reason == "end_turn":
             text = "".join(b.text for b in response.content if hasattr(b, "text"))
             if week_schedule_saved and "[" not in text:
-                text = text.rstrip() + "\n\n[Ga till schemat]"
+                text = text.rstrip() + "\n\n[Gå till schemat]"
             return text
 
         if response.stop_reason == "tool_use":
