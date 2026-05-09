@@ -20,17 +20,34 @@ WEEKDAYS_SV = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag", "S
 TOOLS = [
     {
         "name": "update_week_schedule",
-        "description": "Skapar schema för ALLA 7 dagar på en gång. Använd detta ALLTID vid veckoschemaskapande.",
+        "description": "Skapar schema för ALLA 7 dagar på en gång. Använd detta ALLTID vid veckoschemaskapande - aldrig update_schedule 7 gånger.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "days": {
                     "type": "array",
+                    "description": "Lista med 7 dagar",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "date": {"type": "string"},
-                            "tasks": {"type": "array"}
+                            "date": {"type": "string", "description": "ISO-datum YYYY-MM-DD"},
+                            "tasks": {
+                                "type": "array",
+                                "description": "Max 6 uppgifter",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "title": {"type": "string"},
+                                        "category": {"type": "string", "description": "morgon|mat|träning|lärande|jobb|reflektion|paus"},
+                                        "start": {"type": "string", "description": "HH:MM"},
+                                        "end": {"type": "string", "description": "HH:MM"},
+                                        "period": {"type": "string", "description": "t.ex. 07:00-07:30"},
+                                        "subtasks": {"type": "array", "items": {"type": "string"}},
+                                        "done": {"type": "boolean"}
+                                    },
+                                    "required": ["title", "category"]
+                                }
+                            }
                         },
                         "required": ["date", "tasks"]
                     }
@@ -41,12 +58,27 @@ TOOLS = [
     },
     {
         "name": "update_schedule",
-        "description": "Ersätter schemat för ETT datum.",
+        "description": "Ersätter schemat för ETT datum. Använd vid justeringar.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "date": {"type": "string"},
-                "tasks": {"type": "array"}
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string"},
+                            "category": {"type": "string"},
+                            "start": {"type": "string"},
+                            "end": {"type": "string"},
+                            "period": {"type": "string"},
+                            "subtasks": {"type": "array", "items": {"type": "string"}},
+                            "done": {"type": "boolean"}
+                        },
+                        "required": ["title", "category"]
+                    }
+                }
             },
             "required": ["date", "tasks"]
         }
@@ -97,12 +129,25 @@ Dagens datum: {today_date} ({today_weekday})
 ANVÄNDARPROFIL:
 {profile}
 
-REGLER:
+ABSOLUTA REGLER:
 - Kalla ALDRIG get_user_profile - profilen finns redan ovan
-- Vid schemaskapande: kalla update_week_schedule + save_milestones SAMTIDIGT
-- Max 6 uppgifter per dag: morgon, frukost, träning, deep work, lunch, reflektion
-- Avsluta schemasvar med exakt: [Gå till schemat]
-- Max 2-3 meningar per svar, inga emojis, inga asterisker"""
+- Vid schemaskapande: kalla update_week_schedule + save_milestones i SAMMA svar (parallellt)
+- Avsluta alltid schemasvar med exakt texten: [Gå till schemat]
+- Max 2 meningar text efter verktygsanropen
+
+SCHEMA-FORMAT (update_week_schedule):
+Varje dag ska ha exakt dessa 6 uppgifter som OBJEKT med title, category, start, end, period:
+1. Morgonrutin — category: morgon, start: {wake}, end: {wake_30}
+2. Frukost — category: mat, start: {wake_30}, end: {wake_60}
+3. Träning — category: träning (hoppa över om ingen träning i profilen)
+4. Deep Work — category: lärande, 2 timmar
+5. Lunch — category: mat, 1 timme
+6. Kvällsreflektion — category: reflektion, 20 min
+
+EXEMPEL på korrekt task-objekt:
+{{"title": "Morgonrutin", "category": "morgon", "start": "07:00", "end": "07:30", "period": "07:00-07:30", "subtasks": [], "done": false}}
+
+ALDRIG skicka tasks som strängar - alltid som objekt."""
 
 
 def _profile_to_str(profile: dict) -> str:
@@ -126,14 +171,32 @@ def _profile_to_str(profile: dict) -> str:
     return "\n".join(lines) if lines else "Ingen profil ännu."
 
 
+def _normalize_task(t) -> dict:
+    """Hanterar tasks oavsett om de är strängar eller objekt."""
+    if isinstance(t, str):
+        return {"title": t, "category": "jobb", "start": "", "end": "", "period": "", "subtasks": [], "done": False}
+    if isinstance(t, dict):
+        return {
+            "title": t.get("title", "Uppgift"),
+            "category": t.get("category", "jobb"),
+            "start": t.get("start", ""),
+            "end": t.get("end", ""),
+            "period": t.get("period", f"{t.get('start','')}–{t.get('end','')}".strip("–")),
+            "subtasks": t.get("subtasks", []),
+            "links": t.get("links", []),
+            "done": t.get("done", False),
+        }
+    return {"title": str(t), "category": "jobb", "start": "", "end": "", "period": "", "subtasks": [], "done": False}
+
+
 def _exec_update_week_schedule(db: Session, user_id: int, inp: dict) -> dict:
     days = inp.get("days", [])
     saved = 0
     for day in days:
         day_date = day.get("date")
-        tasks = [dict(t, done=t.get("done", False)) for t in day.get("tasks", [])]
         if not day_date:
             continue
+        tasks = [_normalize_task(t) for t in day.get("tasks", [])]
         s = db.query(models.Schedule).filter(
             models.Schedule.user_id == user_id,
             models.Schedule.date == day_date,
@@ -148,7 +211,7 @@ def _exec_update_week_schedule(db: Session, user_id: int, inp: dict) -> dict:
 
 
 def _exec_update_schedule(db: Session, user_id: int, inp: dict) -> dict:
-    tasks = [dict(t, done=t.get("done", False)) for t in inp.get("tasks", [])]
+    tasks = [_normalize_task(t) for t in inp.get("tasks", [])]
     s = db.query(models.Schedule).filter(
         models.Schedule.user_id == user_id,
         models.Schedule.date == inp["date"],
@@ -244,10 +307,24 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
 
     today = _get_sweden_today()
     profile = _exec_get_profile(db, user_id)
+
+    # Beräkna vakna-tider för system-prompten
+    wake = profile.get("wake_time", "07:00")
+    try:
+        wh, wm = map(int, wake.split(":"))
+        wake_30 = f"{wh:02d}:{(wm+30)%60:02d}" if wm < 30 else f"{(wh+1):02d}:{(wm-30):02d}"
+        wake_60 = f"{(wh+1):02d}:{wm:02d}"
+    except Exception:
+        wake_30 = "07:30"
+        wake_60 = "08:00"
+
     system = SYSTEM_PROMPT.format(
         today_date=today.isoformat(),
         today_weekday=_get_sweden_weekday(),
         profile=_profile_to_str(profile),
+        wake=wake,
+        wake_30=wake_30,
+        wake_60=wake_60,
     )
 
     claude_messages = list(messages)
