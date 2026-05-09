@@ -361,7 +361,7 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
 
         if response.stop_reason == "end_turn":
             text = "".join(b.text for b in response.content if hasattr(b, "text"))
-            if week_schedule_saved and "[" not in text:
+            if week_schedule_saved and "[Gå till schemat]" not in text:
                 text = text.rstrip() + "\n\n[Gå till schemat]"
             return text
 
