@@ -237,12 +237,11 @@ def _exec_get_profile(db: Session, user_id: int) -> dict:
     p = db.query(models.Profile).filter(models.Profile.user_id == user_id).first()
     if not p:
         return {}
-    result = {}
+    # Start with all raw fields (wake_time, learning_hours, training_type, etc.)
+    result = dict(p.raw or {})
+    # Override/supplement with direct DB columns
     for col in ["name", "age", "situation", "goals", "education", "experience",
-                "budget", "time_per_day", "discipline", "work_style",
-                "wake_time", "sleep_hours", "training", "training_type",
-                "training_duration", "gym_distance", "job_type", "job_hours",
-                "job_commute", "skills", "learning_hours", "timeframe"]:
+                "budget", "time_per_day", "discipline", "work_style"]:
         val = getattr(p, col, None)
         if val:
             result[col] = val
