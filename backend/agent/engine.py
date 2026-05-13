@@ -178,13 +178,31 @@ SUBTASKS (KRAV):
 - Morgonrutin: 2-3 steg, ex "Drick vatten", "10 min meditation", "Las dagens plan"
 - Reflektion: 2-3 fragar, ex "Vad larde jag mig idag?", "Vad förbättras imorgon?"
 
-LANKAR (KUN for larande-uppgifter, 2 lankar):
-- Anvand ALLTID YouTube-soklank, ALDRIG direktlank (video-ID kan vara fel)
-- Format: {{"label": "Beskrivande titel", "url": "https://www.youtube.com/results?search_query=SOKORD"}}
-- KRITISKT: Lankarna MASTE handla om anvandarens skills fran profilen (ex AI Content, No-Code, Digital Marketing) — INTE om jobb eller CV
-- Ex for AI Content Manager: {{"label": "Lär dig AI content creation", "url": "https://www.youtube.com/results?search_query=AI+content+manager+tutorial+beginner"}}
-- Ex for No-Code: {{"label": "Bygg appar utan kod", "url": "https://www.youtube.com/results?search_query=no+code+app+builder+bubble+webflow+tutorial"}}
-- Ex for Digital Marketing: {{"label": "Digital marknadsföring gratis kurs", "url": "https://www.youtube.com/results?search_query=digital+marketing+tutorial+beginners+2024"}}
+LANKAR (KUN for larande-uppgifter, 2-3 lankar):
+- Anvand RIKTIGA kurssidor med stabila URL:er — INTE YouTube direktlankar (de kan vara borta)
+- KRITISKT: Lankarna MASTE handla om anvandarens skills (se profil) — INTE jobb/CV
+- Valj alltid fran dessa beprövade plattformar:
+
+DIGITAL MARKNADSFÖRING:
+  {{"label": "Google Digital Garage – Gratis kurs", "url": "https://learndigital.withgoogle.com/digitalgarage/courses"}}
+  {{"label": "HubSpot Academy – Marketing", "url": "https://academy.hubspot.com/courses/digital-marketing"}}
+  {{"label": "Meta Blueprint – Social Media Ads", "url": "https://www.facebook.com/business/learn"}}
+
+AI CONTENT MANAGER:
+  {{"label": "Coursera – AI for Everyone (gratis)", "url": "https://www.coursera.org/learn/ai-for-everyone"}}
+  {{"label": "Google – AI Essentials", "url": "https://grow.google/certificates/ai-essentials/"}}
+  {{"label": "YouTube – AI content creation tutorial", "url": "https://www.youtube.com/results?search_query=AI+content+creation+tutorial+2024"}}
+
+NO-CODE UTVECKLARE:
+  {{"label": "Bubble Academy – Bygg appar", "url": "https://bubble.io/academy"}}
+  {{"label": "Webflow University – Gratis", "url": "https://university.webflow.com"}}
+  {{"label": "Make.com Academy – Automation", "url": "https://www.make.com/en/academy"}}
+
+ALLMÄNT:
+  {{"label": "freeCodeCamp – Gratis kurser", "url": "https://www.freecodecamp.org/learn"}}
+  {{"label": "Khan Academy", "url": "https://www.khanacademy.org"}}
+
+Valj lankar som passar anvandarens exakta skills. Blanda garna kursplattform + YouTube-sok.
 
 SKICKA ALDRIG tasks som strangar - alltid som objekt med title och category."""
 
