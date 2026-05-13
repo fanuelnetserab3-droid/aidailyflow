@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
 from database import get_db
@@ -53,16 +54,26 @@ def subscription_status(
     return get_trial_status(current_user)
 
 
+class CheckoutRequest(BaseModel):
+    plan: str = "monthly"  # "monthly" eller "yearly"
+
+
 @router.post("/create-checkout")
 def create_checkout(
+    body: CheckoutRequest = CheckoutRequest(),
     current_user: models.User = Depends(auth_utils.get_current_user),
     db: Session = Depends(get_db),
 ):
-    price_id = os.getenv("STRIPE_PRICE_ID")
     frontend_url = os.getenv("FRONTEND_URL", "https://aidailyflow.org")
 
-    if not price_id:
-        raise HTTPException(status_code=500, detail="STRIPE_PRICE_ID saknas i miljövariabler")
+    if body.plan == "yearly":
+        price_id = os.getenv("STRIPE_YEARLY_PRICE_ID")
+        if not price_id:
+            raise HTTPException(status_code=500, detail="STRIPE_YEARLY_PRICE_ID saknas i miljövariabler")
+    else:
+        price_id = os.getenv("STRIPE_PRICE_ID")
+        if not price_id:
+            raise HTTPException(status_code=500, detail="STRIPE_PRICE_ID saknas i miljövariabler")
 
     try:
         session = stripe.checkout.Session.create(
@@ -72,7 +83,7 @@ def create_checkout(
             customer_email=current_user.email,
             success_url=f"{frontend_url}/idag?subscribed=true",
             cancel_url=f"{frontend_url}/prenumerera",
-            metadata={"user_id": str(current_user.id)},
+            metadata={"user_id": str(current_user.id), "plan": body.plan},
         )
         return {"url": session.url}
     except Exception as e:
