@@ -179,9 +179,10 @@ SUBTASKS (KRAV):
 - Reflektion: 2-3 fragar, ex "Vad gick bra?", "Vad förbättras imorgon?"
 
 LANKAR (KUN for larande-uppgifter, 2 lankar):
-- Format: {{"label": "Kanal - Titel", "url": "https://www.youtube.com/watch?v=..."}}
-- Kod/AI: freeCodeCamp, Fireship, CS50, NetworkChuck
-- Traning: Jeff Nippard, Athlean-X
+- Anvand ALLTID YouTube-soklank, ALDRIG direktlank (video-ID kan vara fel)
+- Format: {{"label": "Beskrivande titel", "url": "https://www.youtube.com/results?search_query=SOKORD+HÄR"}}
+- Exempel: {{"label": "Lär dig React gratis", "url": "https://www.youtube.com/results?search_query=react+tutorial+svenska+nybörjare"}}
+- Anpassa sokorden efter anvandarens mal och niva
 
 SKICKA ALDRIG tasks som strangar - alltid som objekt med title och category."""
 
