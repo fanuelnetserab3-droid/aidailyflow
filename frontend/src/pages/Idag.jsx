@@ -349,7 +349,6 @@ export default function Idag() {
                   <AnimatePresence initial={false}>
                     {tasks.map((task, i) => {
                       const c = catColor(task.category)
-                      const isOpen = expanded === i
                       return (
                         <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, duration: 0.3 }}
                           style={{ ...GLASS, borderRadius: 12, marginBottom: 8, border: `1px solid ${task.done ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.07)'}`, overflow: 'hidden', opacity: task.done ? 0.5 : 1 }}>
@@ -366,39 +365,33 @@ export default function Idag() {
                                 {task.period || (task.start && task.end ? `${task.start} — ${task.end}` : '')}
                               </div>
                             </div>
-                            {(task.subtasks?.length > 0 || task.links?.length > 0) && (
-                              <button onClick={() => setExpanded(isOpen ? null : i)} style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, padding: '4px 6px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-                                {isOpen ? '▲' : '▼'}
-                              </button>
-                            )}
                           </div>
-                          <AnimatePresence initial={false}>
-                            {isOpen && (
-                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden', padding: '0 14px 12px' }}>
-                                {task.subtasks?.length > 0 && (
-                                  <div style={{ marginTop: 8 }}>
-                                    <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6, textTransform: 'uppercase' }}>Delsteg</div>
-                                    {task.subtasks.map((sub, si) => (
-                                      <div key={si} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 6 }}>
-                                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#00d4aa', marginTop: 5, flexShrink: 0 }} />
-                                        <span style={{ fontSize: 11, color: '#E2E8F0' }}>{decodeUnicode(sub)}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                {task.links?.length > 0 && (
-                                  <div style={{ marginTop: task.subtasks?.length > 0 ? 10 : 8 }}>
-                                    <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6, textTransform: 'uppercase' }}>Resurser</div>
-                                    {task.links.map((link, li) => (
-                                      <a key={li} href={link.url} target="_blank" rel="noreferrer" style={{ display: 'block', fontSize: 11, color: '#7DD3FC', textDecoration: 'none', marginBottom: 6, wordBreak: 'break-word' }}>
-                                        {link.label || link.url}
-                                      </a>
-                                    ))}
-                                  </div>
-                                )}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          {(task.subtasks?.length > 0 || task.links?.length > 0) && (
+                            <div style={{ padding: '0 14px 12px' }}>
+                              {task.subtasks?.length > 0 && (
+                                <div style={{ marginTop: 4 }}>
+                                  <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6, textTransform: 'uppercase' }}>Delsteg</div>
+                                  {task.subtasks.map((sub, si) => (
+                                    <div key={si} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 6 }}>
+                                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#00d4aa', marginTop: 5, flexShrink: 0 }} />
+                                      <span style={{ fontSize: 11, color: '#E2E8F0' }}>{decodeUnicode(sub)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {task.links?.length > 0 && (
+                                <div style={{ marginTop: task.subtasks?.length > 0 ? 10 : 4 }}>
+                                  <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6, textTransform: 'uppercase' }}>Resurser</div>
+                                  {task.links.map((link, li) => (
+                                    <a key={li} href={link.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#7DD3FC', textDecoration: 'none', marginBottom: 8, wordBreak: 'break-word' }}>
+                                      <span style={{ fontSize: 14 }}>▶</span>
+                                      {link.label || link.url}
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </motion.div>
                       )
                     })}

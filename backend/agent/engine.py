@@ -174,7 +174,7 @@ Varje dag ska ha 6 uppgifter som OBJEKT med title, category, start, end, period:
 
 SUBTASKS (KRAV):
 - Larande: 3 konkreta steg, ex "Bygg login-sidan i React", "Lös 2 LeetCode Easy", "Skicka 3 ansökningar"
-- Traning: 3 ovningar, ex "Bänkpress 4x8", "Knäböj 3x10", "5 min stretching"
+- Traning ({training_h}h): 5 steg som fyller hela passet: "Uppvärmning 10 min", "Övning 1 med sets/reps", "Övning 2 med sets/reps", "Övning 3 med sets/reps", "Nedvarvning & stretching 10 min" — anpassa antal övningar efter {training_h}h
 - Morgonrutin: 2-3 steg, ex "Drick vatten", "10 min meditation"
 - Reflektion: 2-3 fragar, ex "Vad gick bra?", "Vad förbättras imorgon?"
 
