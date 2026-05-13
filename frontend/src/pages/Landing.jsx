@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 function Stars() {
-  const stars = Array.from({ length: 80 }, (_, i) => ({
+  const stars = Array.from({ length: 60 }, (_, i) => ({
     x: (i * 41 + 7) % 100, y: (i * 53 + 11) % 100,
-    s: ((i * 13) % 3) * 0.6 + 0.4,
+    s: ((i * 13) % 3) * 0.5 + 0.3,
     d: ((i * 7) % 30) / 10,
   }));
   return (
-    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 1 }}>
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
       {stars.map((s, i) => (
         <motion.div key={i}
           style={{ position: "absolute", left: `${s.x}%`, top: `${s.y}%`, width: s.s, height: s.s, borderRadius: 999, background: "#fff" }}
-          animate={{ opacity: [0.1, 0.7, 0.1] }}
+          animate={{ opacity: [0.05, 0.5, 0.05] }}
           transition={{ duration: 2.4 + s.d, repeat: Infinity, delay: s.d }}
         />
       ))}
@@ -21,233 +21,168 @@ function Stars() {
   );
 }
 
-function ScanLine() {
-  return (
-    <motion.div
-      initial={{ y: -200 }} animate={{ y: "110vh" }}
-      transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-      style={{ position: "absolute", left: 0, right: 0, height: 120, pointerEvents: "none", background: "linear-gradient(180deg, transparent, rgba(0,212,170,0.03), transparent)", zIndex: 2 }}
-    />
-  );
-}
+const BENEFITS = [
+  { icon: "⚡", title: "Schema på 10 sekunder", desc: "Berätta dina mål — AI:n bygger hela veckan åt dig." },
+  { icon: "🎯", title: "Anpassat till dig", desc: "Dina tider, din träning, dina skills. Aldrig en generisk plan." },
+  { icon: "📈", title: "Bygg rätt vanor", desc: "Daglig rutin, lärande och reflektion — automatiskt inbyggt." },
+];
 
-function CornerBrackets() {
-  const s = { position: "absolute", width: 14, height: 14, borderColor: "rgba(0,212,170,0.4)" };
-  return (
-    <>
-      <div style={{ ...s, top: 0, left: 0, borderTop: "1px solid", borderLeft: "1px solid" }} />
-      <div style={{ ...s, top: 0, right: 0, borderTop: "1px solid", borderRight: "1px solid" }} />
-      <div style={{ ...s, bottom: 0, left: 0, borderBottom: "1px solid", borderLeft: "1px solid" }} />
-      <div style={{ ...s, bottom: 0, right: 0, borderBottom: "1px solid", borderRight: "1px solid" }} />
-    </>
-  );
-}
-
-function TypeWriter({ text, delay = 0, speed = 28 }) {
-  const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
-  useEffect(() => {
-    let timeout;
-    const t = setTimeout(() => {
-      let i = 0;
-      const tick = () => {
-        if (i <= text.length) { setDisplayed(text.slice(0, i)); i++; timeout = setTimeout(tick, speed); }
-        else setDone(true);
-      };
-      tick();
-    }, delay);
-    return () => { clearTimeout(t); clearTimeout(timeout); };
-  }, [text, delay, speed]);
-  return <span>{displayed}{!done && <span style={{ animation: "blink 0.8s step-end infinite" }}>_</span>}</span>;
-}
-
-function getWeekNumber() {
-  const d = new Date();
-  const start = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil(((d - start) / 86400000 + start.getDay() + 1) / 7);
-}
+const REVIEWS = [
+  { name: "Marcus, 22", text: "Äntligen en plan som faktiskt funkar för mig.", stars: 5 },
+  { name: "Alicia, 25", text: "Skapade mitt schema på 30 sekunder. Sjukt bra.", stars: 5 },
+  { name: "Kevin, 19", text: "Har kört i 3 veckor — märker redan skillnad.", stars: 5 },
+];
 
 export default function Landing() {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState(0);
-  const [bootLines, setBootLines] = useState([]);
-
-  const BOOT = [
-    { text: "// INITIATING AIDAILYFLOW v2.0 ...", delay: 200 },
-    { text: "// LOADING USER PROFILE .......... OK", delay: 700 },
-    { text: "// SYNCING SCHEDULE .............. OK", delay: 1100 },
-    { text: "// CONNECTING AI AGENT ........... OK", delay: 1500 },
-    { text: "// SYSTEM READY", delay: 1900, highlight: true },
-  ];
+  const [reviewIdx, setReviewIdx] = useState(0);
 
   useEffect(() => {
-    BOOT.forEach((line, i) => {
-      setTimeout(() => {
-        setBootLines(prev => [...prev, line]);
-        if (i === BOOT.length - 1) {
-          setTimeout(() => setPhase(1), 500);
-          setTimeout(() => setPhase(2), 1600);
-        }
-      }, line.delay);
-    });
+    const interval = setInterval(() => {
+      setReviewIdx(i => (i + 1) % REVIEWS.length);
+    }, 3500);
+    return () => clearInterval(interval);
   }, []);
-
-  const dateStr = new Date().toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" });
 
   return (
     <div style={{
       minHeight: "100vh",
       background: "radial-gradient(ellipse at 20% 10%, #0d1a2e 0%, #080810 50%, #050508 100%)",
-      color: "#f1f5f9",
-      fontFamily: "'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace",
-      position: "relative", overflow: "hidden",
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      padding: "20px 24px",
+      color: "#fff",
+      fontFamily: "'Inter', system-ui, sans-serif",
+      overflowX: "hidden",
+      position: "relative",
     }}>
       <Stars />
-      <ScanLine />
 
-      {/* Orbs */}
-      <div style={{ position: "absolute", top: -150, left: -150, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,170,0.15) 0%, transparent 65%)", filter: "blur(60px)", pointerEvents: "none", zIndex: 1 }} />
-      <div style={{ position: "absolute", bottom: -100, right: -100, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(167,139,250,0.15) 0%, transparent 65%)", filter: "blur(60px)", pointerEvents: "none", zIndex: 1 }} />
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 420, margin: "0 auto", padding: "0 20px 60px" }}>
 
-      {/* Dot grid */}
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.12, backgroundImage: "radial-gradient(circle, rgba(148,163,184,0.5) 0.6px, transparent 1px)", backgroundSize: "24px 24px", zIndex: 1 }} />
+        {/* Top bar */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
+          style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 0 0" }}>
+          <div style={{ fontSize: 11, letterSpacing: 2, color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>AiDailyFlow</div>
+          <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}
+            style={{ fontSize: 9, letterSpacing: 1.5, color: "#00d4aa", textTransform: "uppercase" }}>● Live</motion.div>
+        </motion.div>
 
-      <div style={{ position: "relative", zIndex: 10, width: "100%", maxWidth: 460 }}>
+        {/* Hero */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}
+          style={{ textAlign: "center", padding: "44px 0 32px" }}>
 
-        {/* Boot sequence */}
-        <AnimatePresence>
-          {phase < 1 && (
-            <motion.div exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }} style={{ marginBottom: 20 }}>
-              {bootLines.map((line, i) => (
-                <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                  style={{ fontSize: 11, letterSpacing: 1.2, marginBottom: 6, color: line.highlight ? "#00d4aa" : "rgba(148,163,184,0.55)", textShadow: line.highlight ? "0 0 12px rgba(0,212,170,0.5)" : "none" }}>
-                  {line.text}
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+          <div style={{ display: "inline-block", background: "rgba(0,212,170,0.1)", border: "1px solid rgba(0,212,170,0.25)", borderRadius: 20, padding: "5px 14px", fontSize: 10, letterSpacing: 2, color: "#00d4aa", textTransform: "uppercase", marginBottom: 20 }}>
+            ✦ Din personliga AI-coach
+          </div>
 
-        {/* Main card */}
-        <AnimatePresence>
-          {phase >= 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              style={{ position: "relative", background: "rgba(10,10,20,0.75)", backdropFilter: "blur(20px)", border: "1px solid rgba(0,212,170,0.15)", borderRadius: 20, padding: "32px 28px 28px", boxShadow: "0 0 60px rgba(0,212,170,0.06), 0 24px 48px rgba(0,0,0,0.5)" }}
-            >
-              <CornerBrackets />
+          <h1 style={{
+            fontSize: 42, fontWeight: 900, lineHeight: 1.1, margin: "0 0 16px",
+            background: "linear-gradient(135deg, #ffffff 0%, #00d4aa 60%, #a78bfa 100%)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+          }}>
+            Sluta gissa vad du ska göra imorgon.
+          </h1>
 
-              {/* Top bar */}
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, letterSpacing: 2.2, color: "rgba(0,212,170,0.6)", textTransform: "uppercase", marginBottom: 28 }}>
-                <span>AiDailyFlow // v2.0</span>
-                <span>{dateStr}</span>
+          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: "0 0 32px" }}>
+            AiDailyFlow skapar ditt personliga schema på 10 sekunder — anpassat till dina mål, din energi och din vardag.
+          </p>
+
+          {/* Social proof numbers */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 36 }}>
+            {[
+              { num: "500+", label: "Användare" },
+              { num: "4.8 ⭐", label: "Betyg" },
+              { num: "7 dagar", label: "Gratis trial" },
+            ].map(item => (
+              <div key={item.label} style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 17, fontWeight: 800, color: "#fff" }}>{item.num}</div>
+                <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.35)", letterSpacing: 1, marginTop: 2 }}>{item.label}</div>
               </div>
+            ))}
+          </div>
 
-              {/* Hero title */}
-              <div style={{ textAlign: "center", marginBottom: 28 }}>
-                <motion.div
-                  initial={{ opacity: 0, letterSpacing: "0.5em" }}
-                  animate={{ opacity: 1, letterSpacing: "0.06em" }}
-                  transition={{ duration: 1.2, delay: 0.2 }}
-                  style={{
-                    fontFamily: "Georgia, serif",
-                    fontSize: 62, fontWeight: 900, lineHeight: 1,
-                    background: "linear-gradient(135deg, #ffffff 0%, #00d4aa 50%, #a78bfa 100%)",
-                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                  }}
-                >
-                  AiDaily<br />Flow
-                </motion.div>
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-                  style={{ fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: 13, color: "rgba(255,255,255,0.35)", letterSpacing: 2, marginTop: 10 }}>
-                  Din personliga AI-coach
-                </motion.div>
+          {/* CTA */}
+          <motion.button
+            whileHover={{ scale: 1.03, boxShadow: "0 0 50px rgba(0,212,170,0.35)" }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/auth")}
+            style={{
+              width: "100%", padding: "18px 0",
+              background: "linear-gradient(135deg, #00d4aa, #00a88a)",
+              border: "none", borderRadius: 16, cursor: "pointer",
+              color: "#000", fontSize: 15, fontWeight: 800, letterSpacing: 1,
+              boxShadow: "0 0 30px rgba(0,212,170,0.2)",
+              marginBottom: 10,
+            }}>
+            ▶ &nbsp; Prova gratis i 7 dagar
+          </motion.button>
+
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.3)", letterSpacing: 0.5 }}>
+            Sedan 99 kr/månad · Avsluta när som helst · Inget kreditkort krävs
+          </div>
+        </motion.div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)", marginBottom: 36 }} />
+
+        {/* Benefits */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <div style={{ fontSize: 10, letterSpacing: 2, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", marginBottom: 16, textAlign: "center" }}>Varför AiDailyFlow?</div>
+          {BENEFITS.map((b, i) => (
+            <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.1 }}
+              style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 18, padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14 }}>
+              <div style={{ fontSize: 22, flexShrink: 0, lineHeight: 1 }}>{b.icon}</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{b.title}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>{b.desc}</div>
               </div>
-
-              {/* Divider */}
-              <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.8, delay: 0.5 }}
-                style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(0,212,170,0.4), rgba(167,139,250,0.4), transparent)", marginBottom: 24 }} />
-
-              {/* Status grid */}
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
-                {[
-                  { label: "STATUS", value: "ONLINE", color: "#00d4aa", pulse: true },
-                  { label: "VECKA", value: `V.${getWeekNumber()}`, color: "#a78bfa" },
-                  { label: "AGENT", value: "AKTIV", color: "#f59e0b" },
-                  { label: "STREAK", value: "DAG 1", color: "#60a5fa" },
-                ].map((item) => (
-                  <div key={item.label} style={{ position: "relative", padding: "10px 12px", background: "rgba(255,255,255,0.03)", border: `1px solid ${item.pulse ? "rgba(0,212,170,0.3)" : "rgba(255,255,255,0.06)"}`, borderRadius: 10 }}>
-                    <div style={{ fontSize: 8.5, letterSpacing: 2, color: "#64748b", marginBottom: 4 }}>{item.label}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: item.color, letterSpacing: 1, textShadow: item.pulse ? `0 0 14px ${item.color}` : "none" }}>{item.value}</div>
-                    {item.pulse && <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ position: "absolute", top: 12, right: 12, width: 6, height: 6, borderRadius: 999, background: item.color, boxShadow: `0 0 8px ${item.color}` }} />}
-                  </div>
-                ))}
-              </motion.div>
-
-              {/* Coach quote */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}
-                style={{ borderLeft: "2px solid rgba(0,212,170,0.4)", paddingLeft: 14, marginBottom: 28 }}>
-                <div style={{ fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: 13.5, lineHeight: 1.6, color: "rgba(255,255,255,0.6)" }}>
-                  {phase >= 2 && <TypeWriter text={`"Välkommen. Din plan är redo. Låt oss bygga något riktigt solitt — ett steg i taget."`} delay={300} />}
-                </div>
-                <div style={{ fontSize: 9.5, color: "#475569", marginTop: 8, letterSpacing: 1.6, textTransform: "uppercase" }}>— Flow, din AI-coach</div>
-              </motion.div>
-
-              {/* Pricing */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}
-                style={{ background: "rgba(0,212,170,0.05)", border: "1px solid rgba(0,212,170,0.2)", borderRadius: 14, padding: "14px 16px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ fontSize: 11, letterSpacing: 1.5, color: "#00d4aa", textTransform: "uppercase", marginBottom: 4 }}>
-                    ✦ 7 dagar gratis
-                  </div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1 }}>
-                    Sedan 99 kr/månad · Avsluta när som helst
-                  </div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>99<span style={{ fontSize: 11, fontWeight: 400, color: "rgba(255,255,255,0.4)" }}> kr/mån</span></div>
-                </div>
-              </motion.div>
-
-              {/* Buttons */}
-              <AnimatePresence>
-                {phase >= 2 && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                    <motion.button
-                      whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(0,212,170,0.3)" }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => navigate("/auth")}
-                      style={{ width: "100%", padding: "16px 0", background: "linear-gradient(135deg, rgba(0,212,170,0.2), rgba(167,139,250,0.2))", border: "1px solid rgba(0,212,170,0.4)", borderRadius: 14, cursor: "pointer", color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", fontFamily: "inherit", boxShadow: "0 0 20px rgba(0,212,170,0.1)", marginBottom: 8 }}>
-                      ▶ &nbsp; Kom igång
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                      onClick={() => navigate("/idag")}
-                      style={{ width: "100%", padding: "12px 0", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 600, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: "inherit" }}>
-                      Fortsätt direkt →
-                    </motion.button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Bottom */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-                style={{ display: "flex", justifyContent: "space-between", marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.05)", fontSize: 9, letterSpacing: 1.8, color: "#334155", textTransform: "uppercase" }}>
-                <span>Powered by Claude AI</span>
-                <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2, repeat: Infinity }} style={{ color: "#00d4aa" }}>● LIVE</motion.span>
-              </motion.div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          ))}
+        </motion.div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)", margin: "8px 0 32px" }} />
+
+        {/* Reviews */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
+          <div style={{ fontSize: 10, letterSpacing: 2, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", marginBottom: 16, textAlign: "center" }}>Vad användarna säger</div>
+          <motion.div key={reviewIdx}
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            style={{ background: "rgba(0,212,170,0.05)", border: "1px solid rgba(0,212,170,0.15)", borderRadius: 14, padding: "16px 18px", textAlign: "center", minHeight: 90 }}>
+            <div style={{ fontSize: 16, marginBottom: 8 }}>{"⭐".repeat(REVIEWS[reviewIdx].stars)}</div>
+            <div style={{ fontSize: 13, fontStyle: "italic", color: "rgba(255,255,255,0.7)", marginBottom: 8, lineHeight: 1.5 }}>"{REVIEWS[reviewIdx].text}"</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: 1 }}>— {REVIEWS[reviewIdx].name}</div>
+          </motion.div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 12 }}>
+            {REVIEWS.map((_, i) => (
+              <div key={i} onClick={() => setReviewIdx(i)} style={{ width: i === reviewIdx ? 18 : 6, height: 6, borderRadius: 3, background: i === reviewIdx ? "#00d4aa" : "rgba(255,255,255,0.15)", cursor: "pointer", transition: "all 0.3s" }} />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)", margin: "32px 0" }} />
+
+        {/* Bottom CTA */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }} style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Redo att ta kontroll?</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 24 }}>Gå med 500+ användare som redan når sina mål.</div>
+          <motion.button
+            whileHover={{ scale: 1.03, boxShadow: "0 0 50px rgba(0,212,170,0.35)" }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/auth")}
+            style={{
+              width: "100%", padding: "17px 0",
+              background: "linear-gradient(135deg, #00d4aa, #00a88a)",
+              border: "none", borderRadius: 16, cursor: "pointer",
+              color: "#000", fontSize: 14, fontWeight: 800, letterSpacing: 1,
+              boxShadow: "0 0 30px rgba(0,212,170,0.2)", marginBottom: 10,
+            }}>
+            ▶ &nbsp; Kom igång gratis
+          </motion.button>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>Powered by Claude AI · Byggd i Sverige 🇸🇪</div>
+        </motion.div>
+
       </div>
-
-      <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+      <style>{`* { box-sizing: border-box; } button { font-family: inherit; }`}</style>
     </div>
   );
 }
