@@ -4,232 +4,106 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 
 const GOALS = [
-  'Hitta jobb',
-  'Bygga företag',
-  'Lära mig skills',
-  'Bättre hälsa',
-  'Tjäna pengar',
-  'Personlig utveckling'
+  { label: 'Hitta jobb', icon: '💼' },
+  { label: 'Bygga företag', icon: '🚀' },
+  { label: 'Lära mig skills', icon: '🧠' },
+  { label: 'Bättre hälsa', icon: '💪' },
+  { label: 'Tjäna pengar', icon: '💰' },
+  { label: 'Personlig utveckling', icon: '🌱' },
+]
+
+const SKILL_SUGGESTIONS = [
+  'AI & Prompting', 'No-Code / Bubble', 'Digital marknadsföring',
+  'Copywriting', 'Video-redigering', 'Programmering', 'Design', 'SEO',
 ]
 
 const TIME_OPTIONS = [
-  { label: '1-2h', value: '1-2' },
-  { label: '3-4h', value: '3-4' },
-  { label: '5-6h', value: '5-6' },
-  { label: 'Helt fri', value: 'unlimited' }
+  { label: '1–2 timmar', value: '1-2', desc: 'Kompakt och fokuserat' },
+  { label: '3–4 timmar', value: '3-4', desc: 'Balanserad dag' },
+  { label: '5–6 timmar', value: '5-6', desc: 'Intensiv satsning' },
+  { label: 'Helt fri dag', value: 'unlimited', desc: 'Maximalt fokus' },
 ]
 
+const MOCK_TASKS = [
+  { time: '07:00', title: 'Morgonrutin', cat: '#F59E0B' },
+  { time: '08:00', title: 'Djupfokus – din skill', cat: '#a78bfa' },
+  { time: '10:00', title: 'Träningspass', cat: '#22C55E' },
+  { time: '13:00', title: 'Lärande & kurser', cat: '#a78bfa' },
+  { time: '20:30', title: 'Reflektion', cat: '#60a5fa' },
+]
+
+// ─── Steg 1: Välkommen ───────────────────────────────────────────
 function WelcomeStep() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5 }}
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px 24px', textAlign: 'center', gap: 32 }}
-    >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.3, type: 'spring', stiffness: 100 }}
-        style={{
-          width: 80,
-          height: 80,
-          borderRadius: 20,
-          background: 'linear-gradient(135deg, #00d4aa, #a78bfa)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 30px rgba(0,212,170,0.4)',
-        }}
-      >
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-        </svg>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px 24px', textAlign: 'center', gap: 28 }}>
+      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: 'spring', stiffness: 100 }}
+        style={{ width: 88, height: 88, borderRadius: 24, background: 'linear-gradient(135deg, #00d4aa, #a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 40px rgba(0,212,170,0.4)', fontSize: 40 }}>
+        ⚡
       </motion.div>
-
       <div>
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          style={{
-            fontSize: 36,
-            fontWeight: 900,
-            background: 'linear-gradient(135deg, #fff 0%, #00d4aa 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            marginBottom: 12,
-            letterSpacing: -0.5,
-            fontFamily: 'Georgia, serif',
-          }}
-        >
+        <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+          style={{ fontSize: 34, fontWeight: 900, background: 'linear-gradient(135deg, #fff 0%, #00d4aa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: 12, letterSpacing: -0.5, fontFamily: 'Georgia, serif' }}>
           Välkommen till AiDailyFlow
         </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7, duration: 0.6 }}
-          style={{
-            fontSize: 16,
-            color: 'rgba(255,255,255,0.6)',
-            fontFamily: 'Georgia, serif',
-            fontStyle: 'italic',
-          }}
-        >
-          Din personliga AI-livscoach
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
+          style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, maxWidth: 300, margin: '0 auto' }}>
+          På 60 sekunder skapar vi ditt personliga AI-schema — anpassat till dina mål och din vardag.
         </motion.p>
       </div>
-
-      <div style={{ marginTop: 20 }} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}
+        style={{ display: 'flex', gap: 24 }}>
+        {['🎯 Dina mål', '🧠 Dina skills', '📅 Ditt schema'].map((t, i) => (
+          <div key={i} style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{t}</div>
+        ))}
+      </motion.div>
     </motion.div>
   )
 }
 
+// ─── Steg 2: Namn ────────────────────────────────────────────────
 function NameStep({ value, onChange }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5 }}
-      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '40px 24px', gap: 24 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '40px 24px', gap: 24 }}>
       <div>
-        <motion.label
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          style={{
-            display: 'block',
-            fontSize: 28,
-            fontWeight: 700,
-            color: '#fff',
-            marginBottom: 8,
-            fontFamily: 'Georgia, serif',
-          }}
-        >
-          Vad heter du?
-        </motion.label>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          style={{
-            fontSize: 14,
-            color: 'rgba(255,255,255,0.4)',
-          }}
-        >
-          Vi vill gärna veta ditt namn
-        </motion.p>
+        <div style={{ fontSize: 11, letterSpacing: 2, color: 'rgba(0,212,170,0.6)', textTransform: 'uppercase', marginBottom: 10 }}>Steg 1 av 4</div>
+        <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: 8 }}>Vad heter du?</h2>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Vi personaliserar schemat efter dig</p>
       </div>
-
-      <motion.input
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Ditt namn..."
-        style={{
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(0,212,170,0.3)',
-          borderRadius: 12,
-          padding: '14px 16px',
-          fontSize: 16,
-          color: '#f1f5f9',
-          outline: 'none',
-          transition: 'all 0.2s',
-          fontFamily: 'inherit',
-          backdropFilter: 'blur(12px)',
-        }}
-        onFocus={(e) => {
-          e.target.style.borderColor = 'rgba(0,212,170,0.6)'
-          e.target.style.background = 'rgba(0,212,170,0.08)'
-        }}
-        onBlur={(e) => {
-          e.target.style.borderColor = 'rgba(0,212,170,0.3)'
-          e.target.style.background = 'rgba(255,255,255,0.05)'
-        }}
+      <input
+        type="text" value={value} onChange={e => onChange(e.target.value)}
+        placeholder="Ditt förnamn..."
+        autoFocus
+        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(0,212,170,0.3)', borderRadius: 14, padding: '16px 18px', fontSize: 18, color: '#f1f5f9', outline: 'none', fontFamily: 'inherit' }}
+        onFocus={e => { e.target.style.borderColor = '#00d4aa'; e.target.style.background = 'rgba(0,212,170,0.08)' }}
+        onBlur={e => { e.target.style.borderColor = 'rgba(0,212,170,0.3)'; e.target.style.background = 'rgba(255,255,255,0.05)' }}
       />
     </motion.div>
   )
 }
 
+// ─── Steg 3: Mål ─────────────────────────────────────────────────
 function GoalStep({ value, onChange }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5 }}
-      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '40px 24px', gap: 24 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '40px 24px', gap: 24 }}>
       <div>
-        <motion.label
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          style={{
-            display: 'block',
-            fontSize: 28,
-            fontWeight: 700,
-            color: '#fff',
-            marginBottom: 8,
-            fontFamily: 'Georgia, serif',
-          }}
-        >
-          Vad vill du uppnå?
-        </motion.label>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          style={{
-            fontSize: 14,
-            color: 'rgba(255,255,255,0.4)',
-          }}
-        >
-          Välj en eller flera mål
-        </motion.p>
+        <div style={{ fontSize: 11, letterSpacing: 2, color: 'rgba(0,212,170,0.6)', textTransform: 'uppercase', marginBottom: 10 }}>Steg 2 av 4</div>
+        <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: 8 }}>Vad vill du uppnå?</h2>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Välj allt som stämmer</p>
       </div>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {GOALS.map((goal, i) => {
-          const isSelected = value.includes(goal)
+          const sel = value.includes(goal.label)
           return (
-            <motion.button
-              key={goal}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 + i * 0.05 }}
-              onClick={() => {
-                if (isSelected) {
-                  onChange(value.filter(g => g !== goal))
-                } else {
-                  onChange([...value, goal])
-                }
-              }}
-              style={{
-                padding: '10px 16px',
-                borderRadius: 10,
-                fontSize: 13,
-                fontWeight: 600,
-                border: isSelected ? '2px solid #00d4aa' : '1px solid rgba(255,255,255,0.2)',
-                background: isSelected ? 'rgba(0,212,170,0.15)' : 'rgba(255,255,255,0.05)',
-                color: isSelected ? '#00d4aa' : 'rgba(255,255,255,0.7)',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                backdropFilter: 'blur(12px)',
-                boxShadow: isSelected ? '0 0 12px rgba(0,212,170,0.3)' : 'none',
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {isSelected && <span style={{ marginRight: 6 }}>✓ </span>}
-              {goal}
+            <motion.button key={goal.label} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
+              onClick={() => sel ? onChange(value.filter(g => g !== goal.label)) : onChange([...value, goal.label])}
+              whileTap={{ scale: 0.96 }}
+              style={{ padding: '14px 12px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: sel ? '2px solid #00d4aa' : '1px solid rgba(255,255,255,0.12)', background: sel ? 'rgba(0,212,170,0.12)' : 'rgba(255,255,255,0.04)', color: sel ? '#00d4aa' : 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.15s', boxShadow: sel ? '0 0 16px rgba(0,212,170,0.2)' : 'none' }}>
+              <span style={{ fontSize: 18 }}>{goal.icon}</span>
+              <span style={{ textAlign: 'left', lineHeight: 1.3 }}>{goal.label}</span>
+              {sel && <span style={{ marginLeft: 'auto', fontSize: 12 }}>✓</span>}
             </motion.button>
           )
         })}
@@ -238,73 +112,83 @@ function GoalStep({ value, onChange }) {
   )
 }
 
+// ─── Steg 4: Skills ──────────────────────────────────────────────
+function SkillsStep({ value, onChange }) {
+  const [custom, setCustom] = useState('')
+
+  const toggle = (s) => {
+    if (value.includes(s)) onChange(value.filter(x => x !== s))
+    else onChange([...value, s])
+  }
+
+  const addCustom = () => {
+    const v = custom.trim()
+    if (v && !value.includes(v)) { onChange([...value, v]); setCustom('') }
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '40px 24px', gap: 24 }}>
+      <div>
+        <div style={{ fontSize: 11, letterSpacing: 2, color: 'rgba(0,212,170,0.6)', textTransform: 'uppercase', marginBottom: 10 }}>Steg 3 av 4</div>
+        <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: 8 }}>Vad vill du lära dig?</h2>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>AI:n hittar kurser & resurser för just dessa</p>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {SKILL_SUGGESTIONS.map((s, i) => {
+          const sel = value.includes(s)
+          return (
+            <motion.button key={s} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}
+              onClick={() => toggle(s)} whileTap={{ scale: 0.95 }}
+              style={{ padding: '9px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, border: sel ? '2px solid #a78bfa' : '1px solid rgba(255,255,255,0.12)', background: sel ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.04)', color: sel ? '#a78bfa' : 'rgba(255,255,255,0.65)', cursor: 'pointer', transition: 'all 0.15s' }}>
+              {sel ? '✓ ' : ''}{s}
+            </motion.button>
+          )
+        })}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          value={custom} onChange={e => setCustom(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && addCustom()}
+          placeholder="Lägg till egen skill..."
+          style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: 12, padding: '12px 14px', fontSize: 14, color: '#f1f5f9', outline: 'none', fontFamily: 'inherit' }}
+        />
+        <motion.button onClick={addCustom} whileTap={{ scale: 0.95 }}
+          style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(167,139,250,0.2)', border: '1px solid rgba(167,139,250,0.3)', color: '#a78bfa', fontSize: 16, cursor: 'pointer' }}>
+          +
+        </motion.button>
+      </div>
+      {value.length > 0 && (
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
+          Valda: {value.join(', ')}
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+// ─── Steg 5: Tid per dag ─────────────────────────────────────────
 function TimeStep({ value, onChange }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5 }}
-      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '40px 24px', gap: 24 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '40px 24px', gap: 24 }}>
       <div>
-        <motion.label
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          style={{
-            display: 'block',
-            fontSize: 28,
-            fontWeight: 700,
-            color: '#fff',
-            marginBottom: 8,
-            fontFamily: 'Georgia, serif',
-          }}
-        >
-          Hur mycket tid har du per dag?
-        </motion.label>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          style={{
-            fontSize: 14,
-            color: 'rgba(255,255,255,0.4)',
-          }}
-        >
-          Vi anpassar ditt program därefter
-        </motion.p>
+        <div style={{ fontSize: 11, letterSpacing: 2, color: 'rgba(0,212,170,0.6)', textTransform: 'uppercase', marginBottom: 10 }}>Steg 4 av 4</div>
+        <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: 8 }}>Hur mycket tid har du?</h2>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Vi anpassar schemat efter din dag</p>
       </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {TIME_OPTIONS.map((option, i) => {
-          const isSelected = value === option.value
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {TIME_OPTIONS.map((opt, i) => {
+          const sel = value === opt.value
           return (
-            <motion.button
-              key={option.value}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 + i * 0.08 }}
-              onClick={() => onChange(option.value)}
-              style={{
-                padding: '16px',
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 600,
-                border: isSelected ? '2px solid #00d4aa' : '1px solid rgba(255,255,255,0.2)',
-                background: isSelected ? 'rgba(0,212,170,0.15)' : 'rgba(255,255,255,0.05)',
-                color: isSelected ? '#00d4aa' : 'rgba(255,255,255,0.7)',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                backdropFilter: 'blur(12px)',
-                boxShadow: isSelected ? '0 0 12px rgba(0,212,170,0.3)' : 'none',
-                textAlign: 'left',
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {isSelected && <span style={{ marginRight: 12 }}>✓ </span>}
-              {option.label}
+            <motion.button key={opt.value} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }}
+              onClick={() => onChange(opt.value)} whileTap={{ scale: 0.98 }}
+              style={{ padding: '16px 18px', borderRadius: 14, border: sel ? '2px solid #00d4aa' : '1px solid rgba(255,255,255,0.12)', background: sel ? 'rgba(0,212,170,0.12)' : 'rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.15s', boxShadow: sel ? '0 0 20px rgba(0,212,170,0.15)' : 'none' }}>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: sel ? '#00d4aa' : '#f1f5f9' }}>{opt.label}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{opt.desc}</div>
+              </div>
+              {sel && <span style={{ color: '#00d4aa', fontSize: 18 }}>✓</span>}
             </motion.button>
           )
         })}
@@ -313,127 +197,79 @@ function TimeStep({ value, onChange }) {
   )
 }
 
+// ─── Steg 6: Klart — förhandsgranskning ──────────────────────────
 function ReadyStep({ data }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5 }}
-      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '40px 24px', gap: 28 }}
-    >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.3, type: 'spring', stiffness: 100 }}
-        style={{
-          width: 72,
-          height: 72,
-          borderRadius: 18,
-          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 30px rgba(251,191,36,0.4)',
-        }}
-      >
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </motion.div>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: '32px 24px', gap: 20, overflowY: 'auto' }}>
+      <div style={{ textAlign: 'center' }}>
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring', stiffness: 100 }}
+          style={{ fontSize: 56, marginBottom: 12 }}>🎉</motion.div>
+        <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: 6 }}>
+          {data.name}, du är redo!
+        </h2>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>Så här kommer ditt schema se ut</p>
+      </div>
 
-      <motion.h1
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        style={{
-          fontSize: 32,
-          fontWeight: 900,
-          color: '#fff',
-          fontFamily: 'Georgia, serif',
-          letterSpacing: -0.5,
-        }}
-      >
-        Du är redo!
-      </motion.h1>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        style={{
-          background: 'rgba(0,212,170,0.08)',
-          border: '1px solid rgba(0,212,170,0.2)',
-          borderRadius: 12,
-          padding: '16px',
-          backdropFilter: 'blur(12px)',
-        }}
-      >
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>Namn</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#f1f5f9' }}>{data.name}</div>
-        </div>
-
-        <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>Mål</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {data.goals.map(g => (
-              <span key={g} style={{
-                fontSize: 12,
-                background: 'rgba(0,212,170,0.15)',
-                border: '1px solid rgba(0,212,170,0.3)',
-                borderRadius: 6,
-                padding: '4px 10px',
-                color: '#00d4aa',
-              }}>
-                {g}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>Tid per dag</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#f1f5f9' }}>
-            {TIME_OPTIONS.find(o => o.value === data.time)?.label}
-          </div>
+      {/* Mock schedule preview */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,212,170,0.15)', borderRadius: 16, padding: '16px 14px' }}>
+        <div style={{ fontSize: 10, letterSpacing: 2, color: 'rgba(0,212,170,0.5)', textTransform: 'uppercase', marginBottom: 12 }}>Förhandsgranskning</div>
+        {MOCK_TASKS.map((t, i) => (
+          <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.08 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{ width: 4, height: 4, borderRadius: '50%', background: t.cat, flexShrink: 0 }} />
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', width: 38, flexShrink: 0 }}>{t.time}</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>
+              {i === 1 && data.skills?.length > 0 ? `Djupfokus – ${data.skills[0]}` : t.title}
+            </div>
+          </motion.div>
+        ))}
+        <div style={{ marginTop: 12, padding: '10px 12px', background: 'rgba(0,212,170,0.06)', borderRadius: 10, fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+          + länkar till kurser & resurser för dina skills
         </div>
       </motion.div>
 
-      <div style={{ marginTop: 8 }} />
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+        {data.goals?.slice(0, 3).map(g => (
+          <span key={g} style={{ fontSize: 11, background: 'rgba(0,212,170,0.1)', border: '1px solid rgba(0,212,170,0.2)', borderRadius: 20, padding: '4px 12px', color: '#00d4aa' }}>{g}</span>
+        ))}
+      </div>
     </motion.div>
   )
 }
 
+// ─── Huvud-komponent ─────────────────────────────────────────────
 export default function Onboarding({ onClose }) {
   const [step, setStep] = useState(1)
   const [name, setName] = useState('')
   const [goals, setGoals] = useState([])
+  const [skills, setSkills] = useState([])
   const [time, setTime] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const userId = localStorage.getItem('user_id')
+  const TOTAL_STEPS = 6
 
   const canContinue = () => {
     if (step === 1) return true
     if (step === 2) return name.trim().length > 0
     if (step === 3) return goals.length > 0
-    if (step === 4) return time !== ''
+    if (step === 4) return true // skills är valfritt
+    if (step === 5) return time !== ''
     return true
   }
 
   const handleNext = async () => {
-    if (step === 5) {
-      // Save and complete onboarding
+    if (step === TOTAL_STEPS) {
       setLoading(true)
       try {
-        const profileData = {
+        await axios.put(`/api/profile/${localStorage.getItem('user_id')}`, {
           name,
           goals,
+          skills,
           time_per_day: time,
-        }
-        await axios.put(`/api/profile/${userId}`, profileData)
+        })
         localStorage.setItem('onboarding_complete', 'true')
         onClose?.()
         navigate('/flow')
@@ -443,119 +279,50 @@ export default function Onboarding({ onClose }) {
         setLoading(false)
       }
     } else {
-      setStep(step + 1)
+      setStep(s => s + 1)
     }
   }
 
   const handlePrev = () => {
-    if (step > 1) setStep(step - 1)
+    if (step > 1) setStep(s => s - 1)
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'linear-gradient(135deg, #0F172A, #1E293B)',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-    }}>
-      {/* Background decoration */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: `
-          radial-gradient(circle at 0% 0%, rgba(0, 212, 170, 0.1) 0%, transparent 40%),
-          radial-gradient(circle at 100% 100%, rgba(167, 139, 250, 0.1) 0%, transparent 40%)
-        `,
-        pointerEvents: 'none',
-      }} />
+    <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse at 20% 10%, #0d1a2e 0%, #080810 60%, #050508 100%)', zIndex: 1000, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Bakgrund */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 0% 0%, rgba(0,212,170,0.08) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(167,139,250,0.08) 0%, transparent 40%)', pointerEvents: 'none' }} />
 
-      {/* Content */}
+      {/* Innehåll */}
       <div style={{ flex: 1, position: 'relative', zIndex: 1, overflow: 'hidden' }}>
         <AnimatePresence mode="wait">
           {step === 1 && <WelcomeStep key="1" />}
           {step === 2 && <NameStep key="2" value={name} onChange={setName} />}
           {step === 3 && <GoalStep key="3" value={goals} onChange={setGoals} />}
-          {step === 4 && <TimeStep key="4" value={time} onChange={setTime} />}
-          {step === 5 && <ReadyStep key="5" data={{ name, goals, time }} />}
+          {step === 4 && <SkillsStep key="4" value={skills} onChange={setSkills} />}
+          {step === 5 && <TimeStep key="5" value={time} onChange={setTime} />}
+          {step === 6 && <ReadyStep key="6" data={{ name, goals, skills, time }} />}
         </AnimatePresence>
       </div>
 
-      {/* Footer: Progress dots + buttons */}
-      <div style={{
-        position: 'relative',
-        zIndex: 10,
-        padding: '24px',
-        background: 'rgba(8,8,16,0.8)',
-        backdropFilter: 'blur(12px)',
-        borderTop: '1px solid rgba(0,212,170,0.15)',
-      }}>
-        {/* Progress dots */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <motion.div
-              key={i}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: step >= i ? '#00d4aa' : 'rgba(255,255,255,0.15)',
-                boxShadow: step >= i ? '0 0 8px rgba(0,212,170,0.6)' : 'none',
-                transition: 'all 0.3s',
-              }}
-            />
-          ))}
+      {/* Footer */}
+      <div style={{ position: 'relative', zIndex: 10, padding: '20px 24px 32px', background: 'rgba(5,5,8,0.85)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,212,170,0.1)' }}>
+        {/* Progress bar */}
+        <div style={{ height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 2, marginBottom: 20, overflow: 'hidden' }}>
+          <motion.div animate={{ width: `${((step - 1) / (TOTAL_STEPS - 1)) * 100}%` }} transition={{ duration: 0.4 }}
+            style={{ height: '100%', background: 'linear-gradient(90deg, #00d4aa, #a78bfa)', borderRadius: 2 }} />
         </div>
 
-        {/* Buttons */}
         <div style={{ display: 'flex', gap: 12 }}>
-          <motion.button
-            onClick={handlePrev}
-            disabled={step === 1}
-            whileHover={{ scale: step > 1 ? 1.02 : 1 }}
-            whileTap={{ scale: step > 1 ? 0.98 : 1 }}
-            style={{
-              flex: 1,
-              padding: '12px 16px',
-              borderRadius: 10,
-              border: '1px solid rgba(255,255,255,0.2)',
-              background: 'rgba(255,255,255,0.05)',
-              color: 'rgba(255,255,255,0.6)',
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: step > 1 ? 'pointer' : 'default',
-              opacity: step === 1 ? 0.3 : 1,
-              transition: 'all 0.2s',
-            }}
-          >
-            Tillbaka
+          <motion.button onClick={handlePrev} disabled={step === 1} whileTap={{ scale: step > 1 ? 0.97 : 1 }}
+            style={{ flex: 1, padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: 600, cursor: step > 1 ? 'pointer' : 'default', opacity: step === 1 ? 0.3 : 1 }}>
+            ← Tillbaka
           </motion.button>
 
-          <motion.button
-            onClick={handleNext}
-            disabled={!canContinue() || loading}
-            whileHover={{ scale: canContinue() ? 1.02 : 1 }}
-            whileTap={{ scale: canContinue() ? 0.98 : 1 }}
-            style={{
-              flex: 1,
-              padding: '12px 16px',
-              borderRadius: 10,
-              border: 'none',
-              background: canContinue() ? 'linear-gradient(135deg, #00d4aa, #a78bfa)' : 'rgba(255,255,255,0.1)',
-              color: canContinue() ? '#0A0A0F' : 'rgba(255,255,255,0.4)',
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: canContinue() ? 'pointer' : 'default',
-              boxShadow: canContinue() ? '0 0 16px rgba(0,212,170,0.4)' : 'none',
-              transition: 'all 0.2s',
-              letterSpacing: 0.5,
-            }}
-          >
-            {loading ? 'Sparar...' : (step === 1 ? 'Kom igång' : step === 5 ? 'Starta min resa' : 'Fortsätt')}
+          <motion.button onClick={handleNext} disabled={!canContinue() || loading}
+            whileHover={{ scale: canContinue() ? 1.02 : 1, boxShadow: canContinue() ? '0 0 30px rgba(0,212,170,0.3)' : 'none' }}
+            whileTap={{ scale: canContinue() ? 0.97 : 1 }}
+            style={{ flex: 2, padding: '14px', borderRadius: 12, border: 'none', background: canContinue() ? 'linear-gradient(135deg, #00d4aa, #a78bfa)' : 'rgba(255,255,255,0.08)', color: canContinue() ? '#000' : 'rgba(255,255,255,0.3)', fontSize: 14, fontWeight: 800, cursor: canContinue() ? 'pointer' : 'default', letterSpacing: 0.5 }}>
+            {loading ? 'Sparar...' : step === 1 ? '▶  Kom igång' : step === TOTAL_STEPS ? '🚀  Skapa mitt schema' : 'Fortsätt →'}
           </motion.button>
         </div>
       </div>
