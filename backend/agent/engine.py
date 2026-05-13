@@ -172,20 +172,16 @@ Varje dag ska ha 6 uppgifter som OBJEKT med title, category, start, end, period:
 5. Deep Work - category: larande, EXAKT {learning_h} timmar (efter lunch)
 6. Kvallsreflektion - category: reflektion, 20 min
 
-SUBTASKS (KRAV - aldrig tomt for larande/traning):
-- Larande: 4-5 konkreta steg, t.ex. "Bygg login-sidan i React", "Lös 3 LeetCode-uppgifter på Easy", "Läs kapitel 4 i Python Crash Course"
-- Traning: 4-5 specifika ovningar, t.ex. "Bänkpress 4x8 @ 70%", "Knäböj 3x10", "5 min stretching"
-- Morgonrutin: 3 steg, t.ex. "Drick ett glas vatten", "10 min meditation", "Kolla dagens plan"
-- Reflektion: 3 fragar, t.ex. "Vad gick bra idag?", "Vad kan förbättras imorgon?", "Hur kandes energin?"
+SUBTASKS (KRAV):
+- Larande: 3 konkreta steg, ex "Bygg login-sidan i React", "Lös 2 LeetCode Easy", "Skicka 3 ansökningar"
+- Traning: 3 ovningar, ex "Bänkpress 4x8", "Knäböj 3x10", "5 min stretching"
+- Morgonrutin: 2-3 steg, ex "Drick vatten", "10 min meditation"
+- Reflektion: 2-3 fragar, ex "Vad gick bra?", "Vad förbättras imorgon?"
 
-LANKAR (larande-uppgifter):
-- Lagg alltid till 2-3 riktiga YouTube-lankar relevanta for anvandarens mal och skills
-- Format: {{"label": "Kanalnamn - Videotitel", "url": "https://www.youtube.com/watch?v=..."}}
-- Exempel for webb/kod: freeCodeCamp, Fireship, The Odin Project, CS50
-- Exempel for traning: Athlean-X, Jeff Nippard, Renaissance Periodization
-- Valj kanaler som matchar anvandarens niva och specifika mal
-
-Exempel task-objekt: {{"title": "Deep Work - Lärande", "category": "larande", "start": "13:00", "end": "17:00", "period": "13:00-17:00", "subtasks": ["Bygg portfolio-sida med React", "Pusha till GitHub", "Skicka 3 jobbansökningar"], "links": [{{"label": "freeCodeCamp - React Tutorial", "url": "https://www.youtube.com/watch?v=bMknfKXIFA8"}}], "done": false}}
+LANKAR (KUN for larande-uppgifter, 2 lankar):
+- Format: {{"label": "Kanal - Titel", "url": "https://www.youtube.com/watch?v=..."}}
+- Kod/AI: freeCodeCamp, Fireship, CS50, NetworkChuck
+- Traning: Jeff Nippard, Athlean-X
 
 SKICKA ALDRIG tasks som strangar - alltid som objekt med title och category."""
 
@@ -391,7 +387,7 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
         try:
             response = client.messages.create(
                 model="claude-haiku-4-5-20251001",
-                max_tokens=4096,
+                max_tokens=8192,
                 system=system,
                 tools=TOOLS,
                 messages=claude_messages,
