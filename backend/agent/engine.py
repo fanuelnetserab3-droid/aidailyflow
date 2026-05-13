@@ -42,7 +42,18 @@ TOOLS = [
                                         "start": {"type": "string", "description": "HH:MM"},
                                         "end": {"type": "string", "description": "HH:MM"},
                                         "period": {"type": "string"},
-                                        "subtasks": {"type": "array", "items": {"type": "string"}},
+                                        "subtasks": {"type": "array", "items": {"type": "string"}, "description": "3-5 konkreta, specifika steg for uppgiften"},
+                                        "links": {
+                                            "type": "array",
+                                            "description": "YouTube/resurslänkar for larande-uppgifter",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "label": {"type": "string"},
+                                                    "url": {"type": "string"}
+                                                }
+                                            }
+                                        },
                                         "done": {"type": "boolean"}
                                     },
                                     "required": ["title", "category"]
@@ -73,7 +84,17 @@ TOOLS = [
                             "start": {"type": "string"},
                             "end": {"type": "string"},
                             "period": {"type": "string"},
-                            "subtasks": {"type": "array", "items": {"type": "string"}},
+                            "subtasks": {"type": "array", "items": {"type": "string"}, "description": "3-5 konkreta steg"},
+                            "links": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "label": {"type": "string"},
+                                        "url": {"type": "string"}
+                                    }
+                                }
+                            },
                             "done": {"type": "boolean"}
                         },
                         "required": ["title", "category"]
@@ -151,7 +172,20 @@ Varje dag ska ha 6 uppgifter som OBJEKT med title, category, start, end, period:
 5. Deep Work - category: larande, EXAKT {learning_h} timmar (efter lunch)
 6. Kvallsreflektion - category: reflektion, 20 min
 
-Exempel task-objekt: {{"title": "Morgonrutin", "category": "morgon", "start": "07:00", "end": "07:30", "period": "07:00-07:30", "subtasks": [], "done": false}}
+SUBTASKS (KRAV - aldrig tomt for larande/traning):
+- Larande: 4-5 konkreta steg, t.ex. "Bygg login-sidan i React", "Lös 3 LeetCode-uppgifter på Easy", "Läs kapitel 4 i Python Crash Course"
+- Traning: 4-5 specifika ovningar, t.ex. "Bänkpress 4x8 @ 70%", "Knäböj 3x10", "5 min stretching"
+- Morgonrutin: 3 steg, t.ex. "Drick ett glas vatten", "10 min meditation", "Kolla dagens plan"
+- Reflektion: 3 fragar, t.ex. "Vad gick bra idag?", "Vad kan förbättras imorgon?", "Hur kandes energin?"
+
+LANKAR (larande-uppgifter):
+- Lagg alltid till 2-3 riktiga YouTube-lankar relevanta for anvandarens mal och skills
+- Format: {{"label": "Kanalnamn - Videotitel", "url": "https://www.youtube.com/watch?v=..."}}
+- Exempel for webb/kod: freeCodeCamp, Fireship, The Odin Project, CS50
+- Exempel for traning: Athlean-X, Jeff Nippard, Renaissance Periodization
+- Valj kanaler som matchar anvandarens niva och specifika mal
+
+Exempel task-objekt: {{"title": "Deep Work - Lärande", "category": "larande", "start": "13:00", "end": "17:00", "period": "13:00-17:00", "subtasks": ["Bygg portfolio-sida med React", "Pusha till GitHub", "Skicka 3 jobbansökningar"], "links": [{{"label": "freeCodeCamp - React Tutorial", "url": "https://www.youtube.com/watch?v=bMknfKXIFA8"}}], "done": false}}
 
 SKICKA ALDRIG tasks som strangar - alltid som objekt med title och category."""
 
