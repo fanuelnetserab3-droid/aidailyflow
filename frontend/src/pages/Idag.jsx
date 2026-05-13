@@ -153,11 +153,13 @@ export default function Idag() {
   const [expanded, setExpanded] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [daysWithTasks, setDaysWithTasks] = useState(new Set())
+  const [streak, setStreak] = useState(0)
   const week = getCurrentWeek()
   const location = useLocation()
 
   useEffect(() => {
     axios.get('/api/milestones').then(r => setMilestones(r.data.data || [])).catch(() => {})
+    axios.get('/api/profile').then(r => setStreak(r.data.streak ?? 0)).catch(() => {})
   }, [])
 
   useEffect(() => { loadSchedule(date) }, [date])
@@ -204,6 +206,19 @@ export default function Idag() {
     const updated = tasks.map((t, idx) => idx === i ? { ...t, done: !t.done } : t)
     setTasks(updated)
     await axios.put(`/api/schedule/${date}`, { tasks: updated })
+
+    // Uppdatera streak om alla uppgifter är klara idag
+    if (date === todayIso) {
+      const allDone = updated.every(t => t.done)
+      const doneCnt = updated.filter(t => t.done).length
+      if (allDone) {
+        const newStreak = streak + 1
+        setStreak(newStreak)
+        await axios.post('/api/profile', { streak: newStreak, done_today: doneCnt }).catch(() => {})
+      } else {
+        await axios.post('/api/profile', { done_today: doneCnt }).catch(() => {})
+      }
+    }
   }
 
   const done = tasks.filter(t => t.done).length
@@ -313,9 +328,17 @@ export default function Idag() {
               style={{ width: '100%', maxHeight: '85vh', background: 'rgba(17,17,24,0.95)', borderRadius: '20px 20px 0 0', padding: '24px 16px', overflowY: 'auto', backdropFilter: 'blur(20px)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div>
-                  <h2 style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9', marginBottom: 4 }}>
-                    {new Date(date + 'T12:00:00').toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })}
-                  </h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                    <h2 style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9', margin: 0 }}>
+                      {new Date(date + 'T12:00:00').toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    </h2>
+                    {streak > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '3px 10px' }}>
+                        <span style={{ fontSize: 14 }}>🔥</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>{streak}</span>
+                      </div>
+                    )}
+                  </div>
                   {tasks.length > 0 && (
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
                       {done}/{tasks.length} klara · {pct}% slutfört
