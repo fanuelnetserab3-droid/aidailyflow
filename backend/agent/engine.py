@@ -173,16 +173,18 @@ Varje dag ska ha 6 uppgifter som OBJEKT med title, category, start, end, period:
 6. Kvallsreflektion - category: reflektion, 20 min
 
 SUBTASKS (KRAV):
-- Larande: 3 konkreta steg, ex "Bygg login-sidan i React", "Lös 2 LeetCode Easy", "Skicka 3 ansökningar"
-- Traning ({training_h}h): 5 steg som fyller hela passet: "Uppvärmning 10 min", "Övning 1 med sets/reps", "Övning 2 med sets/reps", "Övning 3 med sets/reps", "Nedvarvning & stretching 10 min" — anpassa antal övningar efter {training_h}h
-- Morgonrutin: 2-3 steg, ex "Drick vatten", "10 min meditation"
-- Reflektion: 2-3 fragar, ex "Vad gick bra?", "Vad förbättras imorgon?"
+- Larande: 3 konkreta inlarningssteg for anvandarens SKILLS (se profil) — INTE jobbsokning. Ex for AI/No-Code: "Bygg ett AI-verktyg i Make.com", "Skapa en Notion-template och publicera", "Testa ChatGPT API for content-skapande"
+- Traning ({training_h}h): 5 steg som fyller hela passet: "Uppvarmning 10 min", specifika ovningar med sets/reps baserat pa {training_h}h, "Nedvarvning & stretching 10 min"
+- Morgonrutin: 2-3 steg, ex "Drick vatten", "10 min meditation", "Las dagens plan"
+- Reflektion: 2-3 fragar, ex "Vad larde jag mig idag?", "Vad förbättras imorgon?"
 
 LANKAR (KUN for larande-uppgifter, 2 lankar):
 - Anvand ALLTID YouTube-soklank, ALDRIG direktlank (video-ID kan vara fel)
-- Format: {{"label": "Beskrivande titel", "url": "https://www.youtube.com/results?search_query=SOKORD+HÄR"}}
-- Exempel: {{"label": "Lär dig React gratis", "url": "https://www.youtube.com/results?search_query=react+tutorial+svenska+nybörjare"}}
-- Anpassa sokorden efter anvandarens mal och niva
+- Format: {{"label": "Beskrivande titel", "url": "https://www.youtube.com/results?search_query=SOKORD"}}
+- KRITISKT: Lankarna MASTE handla om anvandarens skills fran profilen (ex AI Content, No-Code, Digital Marketing) — INTE om jobb eller CV
+- Ex for AI Content Manager: {{"label": "Lär dig AI content creation", "url": "https://www.youtube.com/results?search_query=AI+content+manager+tutorial+beginner"}}
+- Ex for No-Code: {{"label": "Bygg appar utan kod", "url": "https://www.youtube.com/results?search_query=no+code+app+builder+bubble+webflow+tutorial"}}
+- Ex for Digital Marketing: {{"label": "Digital marknadsföring gratis kurs", "url": "https://www.youtube.com/results?search_query=digital+marketing+tutorial+beginners+2024"}}
 
 SKICKA ALDRIG tasks som strangar - alltid som objekt med title och category."""
 
