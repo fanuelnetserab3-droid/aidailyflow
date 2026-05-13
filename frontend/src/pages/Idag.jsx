@@ -150,6 +150,7 @@ export default function Idag() {
   const [timeframe, setTimeframe] = useState('Idag')
   const [milestones, setMilestones] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editTask, setEditTask] = useState(null) // {idx, title, start, end}
   const [expanded, setExpanded] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [daysWithTasks, setDaysWithTasks] = useState(new Set())
@@ -159,7 +160,27 @@ export default function Idag() {
 
   useEffect(() => {
     axios.get('/api/milestones').then(r => setMilestones(r.data.data || [])).catch(() => {})
-    axios.get('/api/profile').then(r => setStreak(r.data.streak ?? 0)).catch(() => {})
+
+    // Hämta streak och kolla om igår missades
+    axios.get('/api/profile').then(async r => {
+      const currentStreak = r.data.streak ?? 0
+      setStreak(currentStreak)
+
+      if (currentStreak > 0) {
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yIso = formatLocalDate(yesterday)
+        try {
+          const ySched = await axios.get(`/api/schedule/${yIso}`)
+          const yTasks = ySched.data.tasks || []
+          if (yTasks.length > 0 && !yTasks.every(t => t.done)) {
+            // Missade igår — nollställ streak
+            setStreak(0)
+            await axios.post('/api/profile', { streak: 0 }).catch(() => {})
+          }
+        } catch {}
+      }
+    }).catch(() => {})
   }, [])
 
   useEffect(() => { loadSchedule(date) }, [date])
@@ -200,6 +221,20 @@ export default function Idag() {
     } catch {
       setDaysWithTasks(new Set())
     }
+  }
+
+  const saveEditTask = async () => {
+    if (!editTask) return
+    const updated = tasks.map((t, idx) => idx === editTask.idx ? {
+      ...t,
+      title: editTask.title,
+      start: editTask.start,
+      end: editTask.end,
+      period: `${editTask.start}-${editTask.end}`
+    } : t)
+    setTasks(updated)
+    setEditTask(null)
+    await axios.put(`/api/schedule/${date}`, { tasks: updated })
   }
 
   const toggleTask = async (i) => {
@@ -388,6 +423,10 @@ export default function Idag() {
                                 {task.period || (task.start && task.end ? `${task.start} — ${task.end}` : '')}
                               </div>
                             </div>
+                            <button onClick={() => setEditTask({ idx: i, title: task.title, start: task.start || '', end: task.end || '' })}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: 14, padding: '4px 6px', flexShrink: 0 }}>
+                              ✏️
+                            </button>
                           </div>
                           {(task.subtasks?.length > 0 || task.links?.length > 0) && (
                             <div style={{ padding: '0 14px 12px' }}>
@@ -421,6 +460,67 @@ export default function Idag() {
                   </AnimatePresence>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit task modal */}
+      <AnimatePresence>
+        {editTask && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setEditTask(null)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 60, display: 'flex', alignItems: 'flex-end' }}>
+            <motion.div initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              style={{ width: '100%', background: 'rgba(17,17,24,0.98)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,212,170,0.15)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <div>
+                  <div style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(0,212,170,0.6)', textTransform: 'uppercase', marginBottom: 4 }}>Redigera uppgift</div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9', margin: 0 }}>Ändra detaljer</h3>
+                </div>
+                <motion.button onClick={() => setEditTask(null)} whileTap={{ scale: 0.9 }}
+                  style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94A3B8', fontSize: 20, cursor: 'pointer' }}>
+                  ✕
+                </motion.button>
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 10, letterSpacing: 1.5, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Titel</label>
+                <input
+                  value={editTask.title}
+                  onChange={e => setEditTask({ ...editTask, title: e.target.value })}
+                  style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(0,212,170,0.25)', borderRadius: 10, padding: '12px 14px', color: '#f1f5f9', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 10, letterSpacing: 1.5, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Starttid</label>
+                  <input
+                    type="time"
+                    value={editTask.start}
+                    onChange={e => setEditTask({ ...editTask, start: e.target.value })}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(0,212,170,0.25)', borderRadius: 10, padding: '12px 14px', color: '#f1f5f9', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 10, letterSpacing: 1.5, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Sluttid</label>
+                  <input
+                    type="time"
+                    value={editTask.end}
+                    onChange={e => setEditTask({ ...editTask, end: e.target.value })}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(0,212,170,0.25)', borderRadius: 10, padding: '12px 14px', color: '#f1f5f9', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                onClick={saveEditTask}
+                style={{ width: '100%', padding: '15px 0', background: 'linear-gradient(135deg, #00d4aa, #00a88a)', border: 'none', borderRadius: 14, color: '#000', fontSize: 14, fontWeight: 800, letterSpacing: 1, cursor: 'pointer', boxShadow: '0 0 24px rgba(0,212,170,0.25)' }}>
+                ✓ &nbsp; Spara ändringar
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
