@@ -223,6 +223,151 @@ export default function Idag() {
     }
   }
 
+  const shareDay = async () => {
+    const canvas = document.createElement('canvas')
+    const W = 1080, H = 1920
+    canvas.width = W
+    canvas.height = H
+    const ctx = canvas.getContext('2d')
+
+    // Bakgrund
+    const bg = ctx.createLinearGradient(0, 0, W, H)
+    bg.addColorStop(0, '#0d1a2e')
+    bg.addColorStop(0.5, '#080810')
+    bg.addColorStop(1, '#050508')
+    ctx.fillStyle = bg
+    ctx.fillRect(0, 0, W, H)
+
+    // Glow-cirkel
+    const glow = ctx.createRadialGradient(W / 2, H * 0.4, 0, W / 2, H * 0.4, 400)
+    glow.addColorStop(0, 'rgba(0,212,170,0.12)')
+    glow.addColorStop(1, 'rgba(0,212,170,0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(0, 0, W, H)
+
+    // Dekorativ ring
+    ctx.beginPath()
+    ctx.arc(W / 2, H * 0.38, 320, 0, Math.PI * 2)
+    ctx.strokeStyle = 'rgba(0,212,170,0.12)'
+    ctx.lineWidth = 2
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(W / 2, H * 0.38, 280, 0, Math.PI * 2)
+    ctx.strokeStyle = 'rgba(167,139,250,0.08)'
+    ctx.lineWidth = 1
+    ctx.stroke()
+
+    // App-namn
+    ctx.font = '700 36px system-ui'
+    ctx.fillStyle = 'rgba(255,255,255,0.25)'
+    ctx.letterSpacing = '6px'
+    ctx.textAlign = 'center'
+    ctx.fillText('AIDAILYFLOW', W / 2, 120)
+
+    // Datum
+    const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })
+    ctx.font = '500 44px system-ui'
+    ctx.fillStyle = 'rgba(255,255,255,0.45)'
+    ctx.fillText(dateLabel, W / 2, 200)
+
+    // Streak
+    if (streak > 0) {
+      ctx.font = '700 220px system-ui'
+      ctx.fillStyle = '#F59E0B'
+      ctx.shadowColor = 'rgba(245,158,11,0.4)'
+      ctx.shadowBlur = 60
+      ctx.fillText('🔥', W / 2 - 20, H * 0.38)
+      ctx.shadowBlur = 0
+      ctx.font = '900 160px system-ui'
+      const grad = ctx.createLinearGradient(W / 2 - 100, 0, W / 2 + 100, 0)
+      grad.addColorStop(0, '#ffffff')
+      grad.addColorStop(1, '#00d4aa')
+      ctx.fillStyle = grad
+      ctx.fillText(`${streak}`, W / 2, H * 0.38 + 180)
+      ctx.font = '600 52px system-ui'
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'
+      ctx.fillText('dagar i rad', W / 2, H * 0.38 + 260)
+    } else {
+      ctx.font = '900 120px system-ui'
+      ctx.fillStyle = '#00d4aa'
+      ctx.shadowColor = 'rgba(0,212,170,0.4)'
+      ctx.shadowBlur = 40
+      ctx.fillText(`${done}/${tasks.length}`, W / 2, H * 0.42)
+      ctx.shadowBlur = 0
+      ctx.font = '600 52px system-ui'
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'
+      ctx.fillText('uppgifter klara', W / 2, H * 0.42 + 100)
+    }
+
+    // Framsteg-bar
+    const barY = H * 0.65
+    const barW = 700
+    const barX = (W - barW) / 2
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'
+    ctx.beginPath()
+    ctx.roundRect(barX, barY, barW, 12, 6)
+    ctx.fill()
+    if (pct > 0) {
+      const fillGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0)
+      fillGrad.addColorStop(0, '#00d4aa')
+      fillGrad.addColorStop(1, '#a78bfa')
+      ctx.fillStyle = fillGrad
+      ctx.shadowColor = 'rgba(0,212,170,0.5)'
+      ctx.shadowBlur = 20
+      ctx.beginPath()
+      ctx.roundRect(barX, barY, barW * (pct / 100), 12, 6)
+      ctx.fill()
+      ctx.shadowBlur = 0
+    }
+    ctx.font = '600 42px system-ui'
+    ctx.fillStyle = '#00d4aa'
+    ctx.fillText(`${pct}% av dagen klar`, W / 2, barY + 70)
+
+    // Uppgifter (max 5)
+    const shownTasks = tasks.filter(t => t.done).slice(0, 5)
+    if (shownTasks.length > 0) {
+      let ty = H * 0.75
+      shownTasks.forEach(t => {
+        ctx.font = '500 38px system-ui'
+        ctx.fillStyle = 'rgba(255,255,255,0.55)'
+        ctx.fillText(`✓  ${decodeUnicode(t.title)}`, W / 2, ty)
+        ty += 60
+      })
+    }
+
+    // Tagline längst ner
+    ctx.font = '700 48px system-ui'
+    const tagGrad = ctx.createLinearGradient(W / 2 - 200, 0, W / 2 + 200, 0)
+    tagGrad.addColorStop(0, '#ffffff')
+    tagGrad.addColorStop(1, '#00d4aa')
+    ctx.fillStyle = tagGrad
+    ctx.fillText('aidailyflow.org', W / 2, H - 140)
+    ctx.font = '400 36px system-ui'
+    ctx.fillStyle = 'rgba(255,255,255,0.25)'
+    ctx.fillText('Bygg din bästa dag, varje dag.', W / 2, H - 80)
+
+    // Dela
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'min-dag-aidailyflow.png', { type: 'image/png' })
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Min dag med AiDailyFlow',
+            text: streak > 0 ? `🔥 ${streak} dagar i rad! Håller mig på spåret med AiDailyFlow.` : `✅ ${done}/${tasks.length} uppgifter klara idag! #AiDailyFlow`,
+          })
+        } catch {}
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'min-dag-aidailyflow.png'
+        a.click()
+        URL.revokeObjectURL(url)
+      }
+    }, 'image/png')
+  }
+
   const saveEditTask = async () => {
     if (!editTask) return
     const updated = tasks.map((t, idx) => idx === editTask.idx ? {
@@ -380,10 +525,18 @@ export default function Idag() {
                     </p>
                   )}
                 </div>
-                <motion.button onClick={() => setShowModal(false)} whileTap={{ scale: 0.9 }}
-                  style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94A3B8', fontSize: 20, cursor: 'pointer' }}>
-                  ✕
-                </motion.button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {done > 0 && (
+                    <motion.button onClick={shareDay} whileTap={{ scale: 0.9 }} title="Dela din dag"
+                      style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(0,212,170,0.12)', border: '1px solid rgba(0,212,170,0.25)', color: '#00d4aa', fontSize: 18, cursor: 'pointer' }}>
+                      ↑
+                    </motion.button>
+                  )}
+                  <motion.button onClick={() => setShowModal(false)} whileTap={{ scale: 0.9 }}
+                    style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94A3B8', fontSize: 20, cursor: 'pointer' }}>
+                    ✕
+                  </motion.button>
+                </div>
               </div>
 
               {loading ? (
