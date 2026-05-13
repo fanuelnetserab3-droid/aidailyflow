@@ -198,11 +198,21 @@ NO-CODE UTVECKLARE:
   {{"label": "Webflow University – Gratis", "url": "https://university.webflow.com"}}
   {{"label": "Make.com Academy – Automation", "url": "https://www.make.com/en/academy"}}
 
-ALLMÄNT:
+ALLMÄNT (gratis):
   {{"label": "freeCodeCamp – Gratis kurser", "url": "https://www.freecodecamp.org/learn"}}
   {{"label": "Khan Academy", "url": "https://www.khanacademy.org"}}
 
-Valj lankar som passar anvandarens exakta skills. Blanda garna kursplattform + YouTube-sok.
+BETALDA (anvand KUN om anvandaren har budget > 0):
+  {{"label": "Udemy – Kurser från 50 kr", "url": "https://www.udemy.com"}}
+  {{"label": "Skillshare – Prova gratis 1 månad", "url": "https://www.skillshare.com"}}
+  {{"label": "LinkedIn Learning – Karriärkurser", "url": "https://www.linkedin.com/learning"}}
+
+BUDGETREGLER:
+- Budget "Inget" eller "0" → ge KUN gratis kurser
+- Budget finns (ex "500 kr", "1000 kr", "Lite") → blanda 1-2 betalda + 1 gratis
+- Budget "Mycket" eller hog siffra → prioritera betalda premium-kurser
+
+Valj lankar som passar anvandarens exakta skills och budget.
 
 SKICKA ALDRIG tasks som strangar - alltid som objekt med title och category."""
 
