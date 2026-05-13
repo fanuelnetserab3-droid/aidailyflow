@@ -13,9 +13,16 @@ TRIAL_DAYS = 7
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
+# Developer/admin accounts — never locked out
+ADMIN_EMAILS = {"fanuelnetserab3@gmail.com"}
+
 
 def get_trial_status(user: models.User) -> dict:
     """Returnerar trial-status för en användare."""
+    # Admin accounts always have full access
+    if user.email in ADMIN_EMAILS:
+        return {"status": "subscribed", "days_left": None, "trial_expired": False}
+
     if user.is_subscribed:
         return {"status": "subscribed", "days_left": None, "trial_expired": False}
 
