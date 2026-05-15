@@ -62,7 +62,12 @@ async def chat(
 
     messages = [{"role": m.role, "content": m.content} for m in request.messages]
 
-    reply = run_agent(messages, current_user.id, db)
+    try:
+        reply = run_agent(messages, current_user.id, db)
+    except Exception as e:
+        import traceback
+        print(f"[chat ERROR] user_id={current_user.id}: {traceback.format_exc()}")
+        reply = f"Något gick fel: {str(e)[:200]}"
 
     # Persist conversation
     if messages:
