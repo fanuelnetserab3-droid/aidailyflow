@@ -417,16 +417,16 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
     for _ in range(10):
         try:
             response = client.messages.create(
-                model="claude-haiku-4-5-20251001",
+                model="claude-sonnet-4-6",
                 max_tokens=8192,
                 system=system,
                 tools=TOOLS,
                 messages=claude_messages,
             )
         except anthropic.APIStatusError as e:
-            return f"FEL API {e.status_code}: {e.message}"
+            return f"Något gick fel med AI-tjänsten (kod {e.status_code}). Försök igen."
         except Exception as e:
-            return f"FEL ({type(e).__name__}): {str(e)}"
+            return f"Något gick fel: {str(e)[:120]}. Försök igen."
 
         if response.stop_reason in ("end_turn", "stop_sequence"):
             text = "".join(b.text for b in response.content if hasattr(b, "text"))
