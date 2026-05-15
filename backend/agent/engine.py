@@ -418,7 +418,7 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
         try:
             response = client.messages.create(
                 model="claude-sonnet-4-6",
-                max_tokens=8192,
+                max_tokens=16000,
                 system=system,
                 tools=TOOLS,
                 messages=claude_messages,
