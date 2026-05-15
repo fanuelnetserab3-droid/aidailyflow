@@ -417,7 +417,7 @@ def run_agent(messages: list, user_id: int, db: Session) -> str:
     for _ in range(10):
         try:
             response = client.messages.create(
-                model="claude-sonnet-4-6",
+                model="claude-haiku-4-5-20251001",
                 max_tokens=16000,
                 system=system,
                 tools=TOOLS,
